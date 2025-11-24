@@ -145,12 +145,12 @@ Each terminal window will be split:
 ```
 ┌────────────────────────────────────────┐
 │ TOP: Shared Claude Code Output         │
-│ (Both host and collaborator see this)          │
+│ (Both host and collaborator see this)  │
 │                                        │
 │ [host] What is 2+2?                    │
 │ Claude: 2+2 equals 4.                  │
 │                                        │
-│ [collaborator] What about 3+3?                 │
+│ [collaborator] What about 3+3?         │
 │ Claude: 3+3 equals 6.                  │
 └────────────────────────────────────────┘
 ├────────────────────────────────────────┤
@@ -169,13 +169,13 @@ Each terminal window will be split:
 │ [host] What is 2+2?                    │
 │ Claude: 2+2 equals 4.                  │
 │                                        │
-│ [collaborator] What about 3+3?                 │
+│ [collaborator] What about 3+3?         │
 │ Claude: 3+3 equals 6.                  │
 └────────────────────────────────────────┘
 ├────────────────────────────────────────┤
-│ BOTTOM: collaborator's Input                   │
-│ [collaborator]> What about 3+3?                │
-│ [collaborator]> _                              │
+│ BOTTOM: collaborator's Input           │
+│ [collaborator]> What about 3+3?        │
+│ [collaborator]> _                      │
 └────────────────────────────────────────┘
 ```
 
@@ -220,7 +220,7 @@ Both of you see this!
 **Option 1: Side-by-side**
 ```
 ┌──────────────────┬──────────────────┐
-│   host's         │   collaborator's         │
+│   host's         │   collaborator's │
 │   Terminal       │   Terminal       │
 │                  │                  │
 │  [Shared View]   │  [Shared View]   │
@@ -228,7 +228,8 @@ Both of you see this!
 │  │ Claude Out │  │  │ Claude Out │  │
 │  └────────────┘  │  └────────────┘  │
 │  ┌────────────┐  │  ┌────────────┐  │
-│  │host's Input│  │  │collaborator's Input│  │
+│  │host's Input│  │  │collaborator│  │
+│  │            │  │  │   Input    │  │
 │  └────────────┘  │  └────────────┘  │
 └──────────────────┴──────────────────┘
 ```

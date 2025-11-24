@@ -18,14 +18,14 @@ Enable multiple people to collaborate on the same Claude Code session in real-ti
 ## Demo
 
 ```
-Host's Terminal          Shared Claude Code         Collaborator's Terminal
-┌─────────────────┐     ┌──────────────────┐      ┌─────────────────┐
-│ [host]> Add auth│ --> │ [host] Add auth  │  <-- │                 │
-│                 │     │ Claude: Here's...│      │                 │
-│                 │     │                  │      │ [collaborator]> JWT?  │
-│                 │     │ [collaborator] JWT?    │      │                 │
-└─────────────────┘     │ Claude: Sure...  │      └─────────────────┘
-                        └──────────────────┘
+Host's Terminal            Shared Claude Code           Collaborator's Terminal
+┌───────────────────┐     ┌────────────────────┐      ┌───────────────────────┐
+│ [host]> Add auth  │ --> │ [host] Add auth    │  <-- │                       │
+│                   │     │ Claude: Here's...  │      │                       │
+│                   │     │                    │      │ [collaborator]> JWT?  │
+│                   │     │ [collaborator] JWT?│      │                       │
+└───────────────────┘     │ Claude: Sure...    │      └───────────────────────┘
+                          └────────────────────┘
 ```
 
 Claude sees:
@@ -181,29 +181,29 @@ join-claude-session.sh collaborator project-alpha
 
 ### Local Testing Setup
 ```
-┌─────────────────────────────────────────────┐
-│         Your Mac                            │
-│                                             │
-│  Terminal 1        Terminal 2  Terminal 3  │
-│  ┌──────────┐     ┌─────────┐ ┌─────────┐ │
-│  │  Claude  │ <-- │  Host   │ │ Collaborator │ │
-│  │   Code   │     │ Input   │ │ Input   │ │
-│  └──────────┘     └─────────┘ └─────────┘ │
-│       ▲                 │           │       │
-│       └─────────────────┴───────────┘       │
-│            tmux session                     │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│         Your Mac                                    │
+│                                                     │
+│  Terminal 1       Terminal 2       Terminal 3       │
+│  ┌──────────┐    ┌─────────┐    ┌──────────────┐    │
+│  │  Claude  │<-- │  Host   │    │ Collaborator │    │
+│  │   Code   │    │ Input   │    │    Input     │    │
+│  └──────────┘    └─────────┘    └──────────────┘    │
+│       ▲                │                 │          │
+│       └────────────────┴─────────────────┘          │
+│                  tmux session                       │
+└─────────────────────────────────────────────────────┘
 ```
 
 ### Remote Collaboration Setup
 ```
-Host's Machine              Shared Server          Collaborator's Machine
-┌──────────────┐          ┌───────────────┐        ┌──────────────┐
-│              │          │               │        │              │
-│ Input Script │──SSH────>│ tmux session  │<──SSH──│ Input Script │
-│ [host]>      │          │ Claude Code   │        │ [collaborator]>    │
-└──────────────┘          │               │        └──────────────┘
-                          └───────────────┘
+Host's Machine           Shared Server         Collaborator's Machine
+┌──────────────┐        ┌───────────────┐        ┌──────────────────┐
+│              │        │               │        │                  │
+│ Input Script │─SSH───>│ tmux session  │<──SSH──│  Input Script    │
+│ [host]>      │        │ Claude Code   │        │ [collaborator]>  │
+└──────────────┘        │               │        └──────────────────┘
+                        └───────────────┘
 ```
 
 ---
