@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*~
+
+# Test outputs
+test-output/
+*.log
+
+# Personal configs
+local-config.sh
+
+# Editor directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archive (internal research/design docs not for users)
+archive/
