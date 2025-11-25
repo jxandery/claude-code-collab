@@ -27,21 +27,38 @@ host has already set up the shared server. You just need to configure your local
 
 Check if you have SSH keys:
 ```bash
+# Check for ED25519 (modern, recommended)
+ls ~/.ssh/id_ed25519.pub
+
+# OR check for RSA (older but common)
 ls ~/.ssh/id_rsa.pub
 ```
 
-If you see "No such file", create them:
+If you have either one, skip to displaying your key below.
+
+If you see "No such file" for both, create one:
 ```bash
+# Modern ED25519 key (recommended)
+ssh-keygen -t ed25519 -C "collaborator@claudecollab"
+
+# OR traditional RSA key (if ED25519 not supported)
 ssh-keygen -t rsa -b 4096 -C "collaborator@claudecollab"
+
 # Press Enter for all prompts (accept defaults)
 ```
 
 Display your public key:
 ```bash
+# If you created/have ED25519:
+cat ~/.ssh/id_ed25519.pub
+
+# OR if you created/have RSA:
 cat ~/.ssh/id_rsa.pub
 ```
 
-**Send this public key to host** so he can add it to the server.
+**Send this ENTIRE public key to the host** so they can add it to the server.
+
+> **Important:** Make sure you send the PUBLIC key (`.pub` file), not the private key. The public key starts with `ssh-ed25519` or `ssh-rsa`.
 
 ---
 
@@ -295,23 +312,49 @@ You should see it appear in the top pane!
 Coordinate with host via Slack/Discord/phone:
 1. Agree on a time
 2. Make sure Claude Code is running on the server (host will handle this initially)
-3. Both run your collaboration scripts
+3. Both understand the two-terminal setup
 
 ### Starting the Session
 
-**collaborator runs:**
+You'll need **TWO terminals**:
+- **Terminal 1:** Your input
+- **Terminal 2:** View Claude's responses
+
+**Terminal 1 - Your Input:**
 ```bash
-claude-collab.sh collaborator
+# SSH to the server
+ssh claudeteam@SERVER_IP
+
+# Join the session (IMPORTANT: Run this ON the server after SSH)
+join-claude-session.sh collaborator claude-collab
 ```
 
-**host runs:**
+You'll see:
+```
+Claude Code Collaboration Mode
+User: collaborator
+Session: claude-collab
+
+Your prompts will be prefixed with [collaborator]
+Press Ctrl+C to exit
+
+[collaborator]> _
+```
+
+**Terminal 2 - View Claude's Responses:**
+
+Open a second terminal and run:
 ```bash
-claude-collab.sh host
+# SSH to the server
+ssh claudeteam@SERVER_IP
+
+# Attach to session in read-only mode
+tmux attach-session -r -t claude-collab
 ```
 
 ### During the Session
 
-**Top pane (both of you see this):**
+**In Terminal 2 (both you and host see this):**
 ```
 [host] Add user authentication with JWT
 Claude: I'll help you implement JWT authentication...
@@ -325,11 +368,17 @@ Claude: Yes collaborator, building on host's authentication...
 Claude: I'll create tests for both features...
 ```
 
-**Bottom pane (your input):**
+**In Terminal 1 (your input):**
 ```
 [collaborator]> Can we also handle refresh tokens?
 [collaborator]> Let me ask about error handling
 [collaborator]> _
+```
+
+**Host's Terminal 1 (their input):**
+```
+[host]> Add user authentication with JWT
+[host]> _
 ```
 
 ### Best Practices

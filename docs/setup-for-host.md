@@ -47,12 +47,23 @@ You need one server where Claude Code will run. Both you and collaborator will c
 
 ### Option C: Use Your Own Mac (Quick Test Only)
 
-If you just want to test before setting up a server:
-1. Enable Remote Login: System Preferences → Sharing → Remote Login
-2. Note your local IP: `ifconfig | grep "inet "`
-3. collaborator will need to be on your network or you'll need port forwarding
+> **⚠️ CRITICAL SECURITY WARNING**: DO NOT USE YOUR LOCAL MACHINE FOR REAL COLLABORATION!
+>
+> Allowing remote login to your Mac gives collaborators:
+> - **Full access** to all your files and data
+> - **Complete control** over your system with your user privileges
+> - **Access to credentials**: SSH keys, API tokens, passwords, cloud credentials
+> - **Ability to install malware**, create backdoors, or steal intellectual property
+> - **Access to your network** and potentially other systems you can reach
+>
+> **This option should ONLY be used for quick personal testing with multiple terminal windows on your own machine. NEVER enable Remote Login for external collaborators.**
 
-**For production use, I recommend Option A (DigitalOcean).**
+If you just want to test before setting up a server (with no external access):
+1. ~~Enable Remote Login: System Preferences → Sharing → Remote Login~~ **DO NOT enable Remote Login**
+2. Use multiple terminal windows on your own Mac to simulate collaboration
+3. Follow the local testing guide: [QUICK-TEST-LOCAL-MAC.md](QUICK-TEST-LOCAL-MAC.md)
+
+**For any real collaboration with other people, you MUST use Option A (DigitalOcean) or Option B (AWS).**
 
 ---
 

@@ -1,5 +1,20 @@
 # Quick Test Setup - Local Mac Only (No Cloud Server)
 
+> **⚠️ CRITICAL SECURITY WARNING**
+>
+> This guide is for **LOCAL TESTING ONLY** using multiple terminal windows on **YOUR OWN MACHINE**.
+>
+> **DO NOT use your local Mac for real collaboration with other people!**
+>
+> Allowing remote access to your local machine would give collaborators:
+> - Full access to all your files, credentials, and SSH keys
+> - Ability to execute any commands with your user privileges
+> - Access to sensitive data, API tokens, and cloud credentials
+> - Potential to install malware or create backdoors
+> - Access to your local network and other systems
+>
+> **For actual collaboration, you MUST use a dedicated cloud server (DigitalOcean, AWS, etc.).**
+
 ## Purpose
 
 Test the collaboration concept on your Mac before setting up a cloud server. You'll simulate both host and collaborator on the same machine to see how it works.
@@ -11,11 +26,13 @@ Test the collaboration concept on your Mac before setting up a cloud server. You
 ## What You'll Do
 
 1. Create a shared tmux session on your Mac
-2. Open two terminal windows
-3. One terminal = "host" typing
-4. Other terminal = "collaborator" typing
+2. Open two terminal windows **on the same Mac**
+3. One terminal = "host" typing (simulated)
+4. Other terminal = "collaborator" typing (simulated)
 5. Both see the same Claude Code output
 6. Test the auto-prefixing behavior
+
+**Note:** You are simulating collaboration by yourself on one machine. This is safe because no external access is involved.
 
 ---
 
@@ -419,18 +436,22 @@ You: "This is real-time collaboration with Claude Code. Questions?"
 
 ## What's Different from Real Setup?
 
-**Local Test:**
+**Local Test (Safe):**
 - Both "users" on same Mac
 - Simulated with two terminal windows
 - Just for demo/proof-of-concept
+- **No external access** - safe for testing
+- **No security risk** - you're only accessing your own machine
 
-**Real Setup (with cloud server):**
+**Real Setup (with cloud server - Required for actual collaboration):**
 - Each person on their own computer
 - Cloud server in between
 - Actually remote collaboration
 - Costs $12/month
+- **Secure** - collaborators access shared server, not your personal machine
+- **Isolated** - your personal files and credentials remain private
 
-The **experience is identical**, just the infrastructure differs!
+The **experience is identical**, but the security model is completely different! Never skip the cloud server for real collaboration.
 
 ---
 

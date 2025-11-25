@@ -15,6 +15,26 @@ Enable multiple people to collaborate on the same Claude Code session in real-ti
 - **Real-time**: Everyone sees all interactions as they happen
 - **Simple setup**: Just run a script on each person's machine
 
+## Two Ways to Collaborate
+
+### ⚡ tmate (Quick Start - 5 minutes)
+**Best for:** Testing, demos, quick sessions
+- Zero networking setup required
+- Works instantly from anywhere
+- Free forever
+- Manual username prefixing
+- [→ tmate setup guide](docs/tmate-setup.md)
+
+### 🚀 SSH+tmux (Professional Setup - 30-60 minutes)
+**Best for:** Regular collaboration, better UX
+- Automatic username prefixing
+- Split-screen interface (view/input separated)
+- Requires cloud server ($12/mo) or your Mac with port forwarding
+- Full control and privacy
+- [→ SSH+tmux setup guide](docs/setup-for-host.md)
+
+**Not sure which to choose?** See the [detailed comparison guide](docs/tmate-vs-ssh-tmux.md).
+
 ## Demo
 
 ```
@@ -40,6 +60,8 @@ Claude sees:
 ## Quick Start
 
 ### Local Testing (Single Machine)
+
+> **⚠️ SECURITY WARNING**: Local testing on your machine should ONLY be used for testing the concept yourself. DO NOT allow external collaborators to access your local machine as this grants them full system access, including all your files, credentials, SSH keys, and the ability to execute any commands with your user privileges. For actual collaboration, always use a dedicated cloud server (DigitalOcean, AWS, etc.).
 
 Test the concept on your own machine before setting up with colleagues:
 
@@ -105,6 +127,8 @@ source ~/.zshrc
 ## Usage
 
 ### For Local Testing (Same Machine)
+
+> **⚠️ SECURITY WARNING**: This is for local testing only. Never allow remote users to access your local machine.
 
 **Step 1: Create shared session**
 ```bash
@@ -179,10 +203,10 @@ join-claude-session.sh collaborator project-alpha
 
 ## Architecture
 
-### Local Testing Setup
+### Local Testing Setup (⚠️ For Testing Only - Security Risk for Real Collaboration)
 ```
 ┌─────────────────────────────────────────────────────┐
-│         Your Mac                                    │
+│         Your Mac (⚠️ TESTING ONLY)                  │
 │                                                     │
 │  Terminal 1       Terminal 2       Terminal 3       │
 │  ┌──────────┐    ┌─────────┐    ┌──────────────┐    │
