@@ -1,8 +1,14 @@
 #!/bin/bash
 
-# Generic Claude Code Collaboration Input Script
+# Claude Code Collaboration Script - Simple Input Mode
+# This provides an input prompt only. You'll need a separate terminal to view Claude's responses.
+#
+# For a better experience with split-pane view, use: join-claude-session-split.sh
+#
 # Usage: join-claude-session.sh [username] [session-name]
 # If no username provided, defaults to hostname
+#
+# Note: This script runs ON the server after you SSH in, not on your local machine.
 
 USER_NAME="${1}"
 SESSION="${2:-test-collab}"

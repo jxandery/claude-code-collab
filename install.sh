@@ -30,10 +30,18 @@ fi
 echo -e "${BLUE}→ Creating ~/bin directory...${NC}"
 mkdir -p ~/bin
 
-# Copy the script
-echo -e "${BLUE}→ Installing join-claude-session.sh...${NC}"
+# Copy the scripts
+echo -e "${BLUE}→ Installing collaboration scripts...${NC}"
 cp join-claude-session.sh ~/bin/
 chmod +x ~/bin/join-claude-session.sh
+
+if [ -f join-claude-session-split.sh ]; then
+    cp join-claude-session-split.sh ~/bin/
+    chmod +x ~/bin/join-claude-session-split.sh
+    echo -e "${GREEN}  ✓ Installed join-claude-session-split.sh (split-pane mode)${NC}"
+fi
+
+echo -e "${GREEN}  ✓ Installed join-claude-session.sh (simple mode)${NC}"
 
 # Check if ~/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
@@ -67,10 +75,15 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║  Installation Complete! ✓              ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}Usage:${NC}"
-echo -e "  ${YELLOW}join-claude-session.sh${NC}                         # Uses hostname as username"
-echo -e "  ${YELLOW}join-claude-session.sh host${NC}                    # Uses 'host' as username"
-echo -e "  ${YELLOW}join-claude-session.sh collaborator my-session${NC} # Custom username and session"
+echo -e "${BLUE}Two modes available:${NC}"
+echo ""
+echo -e "${GREEN}1. Split-Pane Mode (Recommended)${NC}"
+echo -e "   Shows Claude output and your input in one terminal window"
+echo -e "   ${YELLOW}join-claude-session-split.sh <username> <server-ip> [user] [session]${NC}"
+echo ""
+echo -e "${BLUE}2. Simple Input Mode${NC}"
+echo -e "   Input only - requires separate terminal for viewing"
+echo -e "   ${YELLOW}join-claude-session.sh <username> [session]${NC}"
 echo ""
 echo -e "${BLUE}Next Steps:${NC}"
 echo "  1. If PATH was updated, run: source $SHELL_RC"

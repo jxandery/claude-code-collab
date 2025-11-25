@@ -472,53 +472,88 @@ exit
 
 ## Part 7: Join Collaboration Session (5 minutes)
 
-### Understanding the Setup
+### Choose Your Mode
 
-You'll need **TWO terminals** for the best experience:
-- **Terminal 1:** Your input (with `[host]>` prompt)
-- **Terminal 2:** View Claude's responses (read-only)
+You have two options for joining the collaboration session:
 
-### Terminal 1: Your Input
+**Option A: Split-Pane Mode (Recommended)**
+- See both Claude's responses AND your input in ONE terminal window
+- Easier to use, better experience
+- Runs from your local Mac
 
-From your Mac:
+**Option B: Two-Terminal Mode**
+- Input in one terminal, view responses in another
+- Good if you prefer separate windows
+
+---
+
+### Option A: Split-Pane Mode (Recommended)
+
+From your Mac (NOT on the server):
 
 ```bash
-# Step 1: SSH to the server
-ssh claudeteam@164.92.123.456
+join-claude-session-split.sh host 68.183.159.246 claudeteam claude-collab
+```
 
-# Step 2: Join the session (IMPORTANT: This runs ON the server, not your Mac)
+You'll see a split screen:
+```
+┌─────────────────────────────────────┐
+│ TOP (70%): Claude Code Output       │
+│                                     │
+│ [host] What is 2+2?                 │
+│ Claude: 2+2 equals 4                │
+│                                     │
+├─────────────────────────────────────┤
+│ BOTTOM (30%): Your Input            │
+│ [host]> _                           │
+└─────────────────────────────────────┘
+```
+
+**That's it!** Everything in one window.
+
+To exit:
+- Press `Ctrl+C` to stop the input loop
+- Press `Ctrl+B`, then `D` to detach from tmux
+
+---
+
+### Option B: Two-Terminal Mode
+
+**Terminal 1 - Your Input:**
+
+From your Mac, SSH to the server first:
+
+```bash
+ssh claudeteam@68.183.159.246
+```
+
+Then run (IMPORTANT: This runs ON the server):
+
+```bash
 join-claude-session.sh host claude-collab
 ```
 
 You'll see:
 ```
-Claude Code Collaboration Mode
-User: host
-Session: claude-collab
-
-Your prompts will be prefixed with [host]
-Press Ctrl+C to exit
-
 [host]> _
 ```
 
-### Terminal 2: View Claude's Responses
+**Terminal 2 - View Claude's Responses:**
 
-Open a **second terminal** on your Mac and run:
+Open a second terminal on your Mac:
 
 ```bash
-# SSH to the server
-ssh claudeteam@164.92.123.456
-
-# Attach to the session in read-only mode
+ssh claudeteam@68.183.159.246
 tmux attach-session -r -t claude-collab
 ```
 
 You'll see Claude Code running with all interactions.
 
+---
+
 ### Try It Out
 
-In **Terminal 1** (input), type:
+Using whichever mode you chose, type:
 ```
 What is 2+2?
 ```

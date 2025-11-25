@@ -312,13 +312,42 @@ You should see it appear in the top pane!
 Coordinate with host via Slack/Discord/phone:
 1. Agree on a time
 2. Make sure Claude Code is running on the server (host will handle this initially)
-3. Both understand the two-terminal setup
+3. Decide which mode to use
 
-### Starting the Session
+### Choose Your Mode
 
-You'll need **TWO terminals**:
-- **Terminal 1:** Your input
-- **Terminal 2:** View Claude's responses
+**Option A: Split-Pane Mode (Recommended)**
+- See both Claude's responses AND your input in ONE terminal window
+- Easier to use, better experience
+- Runs from your local machine
+
+**Option B: Two-Terminal Mode**
+- Input in one terminal, view responses in another
+
+---
+
+### Option A: Split-Pane Mode (Recommended)
+
+From your local machine (NOT on the server):
+
+```bash
+join-claude-session-split.sh collaborator SERVER_IP claudeteam claude-collab
+```
+
+Example:
+```bash
+join-claude-session-split.sh collaborator 68.183.159.246 claudeteam claude-collab
+```
+
+You'll see everything in one window - Claude's responses in the top pane, your input at the bottom.
+
+To exit:
+- Press `Ctrl+C` to stop the input loop
+- Press `Ctrl+B`, then `D` to detach
+
+---
+
+### Option B: Two-Terminal Mode
 
 **Terminal 1 - Your Input:**
 ```bash
@@ -329,21 +358,7 @@ ssh claudeteam@SERVER_IP
 join-claude-session.sh collaborator claude-collab
 ```
 
-You'll see:
-```
-Claude Code Collaboration Mode
-User: collaborator
-Session: claude-collab
-
-Your prompts will be prefixed with [collaborator]
-Press Ctrl+C to exit
-
-[collaborator]> _
-```
-
 **Terminal 2 - View Claude's Responses:**
-
-Open a second terminal and run:
 ```bash
 # SSH to the server
 ssh claudeteam@SERVER_IP
