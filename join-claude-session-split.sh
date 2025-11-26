@@ -78,18 +78,31 @@ tmux kill-session -t "$LOCAL_SESSION" 2>/dev/null
 # Create new session without loading config to avoid conflicts
 tmux -f /dev/null new-session -d -s "$LOCAL_SESSION" -n main
 
-# Top pane: Read-only view of shared session
+# Capture the pane ID of the original pane (will be top pane)
+TOP_PANE=$(tmux list-panes -t "${LOCAL_SESSION}:main" -F "#{pane_id}" | head -1)
+
+# Split: -v creates vertical split (top/bottom), -p 30 makes new pane 30%
+# After split-window -v: new pane is BELOW and becomes active
+# We want: top=Claude view (70%), bottom=input (30%)
+tmux split-window -v -t "${LOCAL_SESSION}:main" -p 30
+
+# Capture the pane ID of the new pane (will be bottom pane)
+BOTTOM_PANE=$(tmux list-panes -t "${LOCAL_SESSION}:main" -F "#{pane_id}" | tail -1)
+
+# Now we have reliable pane IDs regardless of pane-base-index setting:
+# - TOP_PANE = top (original pane, 70%) - for Claude session view
+# - BOTTOM_PANE = bottom (new pane, 30%) - for input script
+
+# Select top pane explicitly and send SSH command
+tmux select-pane -t "$TOP_PANE"
 echo -e "${YELLOW}Connecting to shared Claude Code session...${NC}"
-tmux send-keys -t "${LOCAL_SESSION}:main.0" \
+tmux send-keys -t "$TOP_PANE" \
     "echo 'Connecting to ${REMOTE_HOST}...'; ssh -t ${REMOTE_USER}@${REMOTE_HOST} 'tmux attach-session -r -t ${SESSION}'" C-m
 
 # Give it a moment to connect
-sleep 1
+sleep 2
 
-# Split window horizontally (top/bottom)
-tmux split-window -v -t "${LOCAL_SESSION}:main" -p 30
-
-# Bottom pane: Create a temporary input script
+# Bottom pane (pane 1): Create a temporary input script
 TEMP_SCRIPT="/tmp/claude-collab-input-${USER_NAME}.sh"
 cat > "$TEMP_SCRIPT" << 'SCRIPT_END'
 #!/bin/bash
@@ -126,7 +139,11 @@ sed -i '' "s/SESSION_PLACEHOLDER/${SESSION}/g" "$TEMP_SCRIPT"
 chmod +x "$TEMP_SCRIPT"
 
 # Run the script in bottom pane
-tmux send-keys -t "${LOCAL_SESSION}:main.1" "$TEMP_SCRIPT" C-m
+tmux select-pane -t "$BOTTOM_PANE"
+tmux send-keys -t "$BOTTOM_PANE" "$TEMP_SCRIPT" C-m
+
+# Select bottom pane as active (so user can type immediately)
+tmux select-pane -t "$BOTTOM_PANE"
 
 # Attach to the local session without loading config
 echo -e "${GREEN}Done! Attaching to collaboration session...${NC}"
