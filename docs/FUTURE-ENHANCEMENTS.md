@@ -6,7 +6,184 @@ This document tracks planned features and improvements for Claude Code Collabora
 
 ## In Progress / To Be Implemented
 
-### 1. Feedback System with Slash Commands
+### 1. Session Lifecycle Management (HIGH PRIORITY)
+
+**Status:** Documentation Complete, Script Implementation Pending
+
+**Goal:** Provide clear guidance and automated tools for managing session lifecycles, preventing resource waste and accidental data loss.
+
+**Problem:**
+Users don't know when to end sessions vs keep them running, leading to:
+- Cluttered server with abandoned sessions
+- Accidental data loss when killing sessions without saving
+- Uncertainty about whether sessions are still in use
+- Wasted resources from forgotten sessions
+
+#### Documentation Added (✓ Complete):
+
+- **HOST-INSTRUCTIONS.md:** Full "Managing Session Lifecycle" section
+  - When to keep sessions running vs ending them
+  - Resource cost guidance (5-10MB per session)
+  - Pre-shutdown checklist
+  - How to properly end sessions
+  - What happens when you kill a session (Claude context loss)
+  - Resuming after killing sessions
+
+- **TROUBLESHOOTING.md:** Session Management Issues section
+  - Cleaning up old sessions
+  - Recovering from forgotten save
+  - Checking if session is in use
+  - Handling unexpected session endings
+  - Descriptive session naming best practices
+
+#### Scripts to Build:
+
+##### A. Graceful Shutdown Script
+
+**File: `end-session.sh`**
+
+Interactive session shutdown with safety checks:
+
+```bash
+end-session.sh claude-collab
+
+# Prompts:
+# 1. "Are all collaborators done? Checking who's connected..."
+#    Shows: tmux list-clients -t claude-collab
+#
+# 2. "Have you saved/downloaded all work?"
+#    Lists: Recently modified files in working directory
+#    Offers: "Download files now? [y/n]"
+#    Offers: "Create git commit? [y/n]"
+#
+# 3. "Where did you leave off?"
+#    Prompts for note/comment (saved to session metadata)
+#
+# 4. "Kill session 'claude-collab'?"
+#    Requires typing session name to confirm (safety check)
+#
+# 5. Kills session and displays summary:
+#    "Session ended. Files remain at: /home/user/project"
+#    "To resume: Follow HOST-INSTRUCTIONS Step 2"
+```
+
+Features:
+- Shows who's still connected before allowing kill
+- Lists recently modified files
+- Integrates with `download-from-server.sh` for easy downloads
+- Offers git commit creation
+- Saves session notes for future reference
+- Requires confirmation to prevent accidents
+- Clear next steps after shutdown
+
+##### B. Session Status/Info Script
+
+**File: `session-info.sh`**
+
+Display detailed information about a session:
+
+```bash
+session-info.sh claude-collab
+
+# Output:
+# Session: claude-collab
+# Status: Active
+# Created: 2 days ago (2025-11-25 14:30:22)
+# Last Activity: 30 minutes ago
+# Working Directory: /home/claudeteam/my-project
+# Connected Clients: 2
+#   - john (192.168.1.100) - 30 min ago
+#   - sarah (192.168.1.105) - 5 min ago
+#
+# Recent Files Modified:
+#   - output.md (5 min ago)
+#   - server.js (30 min ago)
+#   - README.md (2 hours ago)
+#
+# Actions:
+#   [J]oin  [E]nd  [D]ownload files  [I]nfo (refresh)  [Q]uit
+```
+
+Features:
+- Shows creation time and last activity
+- Lists all connected clients with IPs
+- Shows working directory
+- Lists recently modified files
+- Interactive menu for common actions
+
+##### C. Session Cleanup Helper
+
+**File: `cleanup-old-sessions.sh`**
+
+Find and clean up abandoned sessions:
+
+```bash
+cleanup-old-sessions.sh
+
+# Scans all sessions and shows:
+#
+# Active Sessions Analysis:
+#
+# [1] claude-collab
+#     Created: 2 hours ago
+#     Last Activity: 5 min ago
+#     Clients: 2 connected
+#     Status: ✓ ACTIVE
+#
+# [2] bug-fixes
+#     Created: 3 days ago
+#     Last Activity: 3 days ago
+#     Clients: None
+#     Status: ⚠ ABANDONED (3 days idle)
+#
+# [3] old-experiment
+#     Created: 14 days ago
+#     Last Activity: 14 days ago
+#     Clients: None
+#     Status: 🚨 STALE (14 days idle)
+#
+# Recommendations:
+#   - Keep session #1 (active)
+#   - Consider ending #2 (abandoned 3 days)
+#   - Should end #3 (stale 14 days)
+#
+# Actions:
+#   [K]ill session  [I]nfo  [R]efresh  [Q]uit
+```
+
+Features:
+- Automatic detection of abandoned sessions
+- Categorizes: Active, Abandoned (>1 day), Stale (>7 days)
+- Interactive cleanup workflow
+- Safety checks before killing
+
+#### Implementation Checklist:
+
+- [x] Add session lifecycle documentation to HOST-INSTRUCTIONS.md
+- [x] Add session management troubleshooting to TROUBLESHOOTING.md
+- [ ] Create `end-session.sh` script
+  - [ ] Check connected clients
+  - [ ] List modified files
+  - [ ] Integrate file download option
+  - [ ] Integrate git commit option
+  - [ ] Save session notes
+  - [ ] Confirmation prompt
+- [ ] Create `session-info.sh` script
+  - [ ] Display session metadata
+  - [ ] Show connected clients
+  - [ ] List recent file modifications
+  - [ ] Interactive actions menu
+- [ ] Create `cleanup-old-sessions.sh` script
+  - [ ] Scan all sessions
+  - [ ] Categorize by activity
+  - [ ] Interactive cleanup workflow
+- [ ] Update `install.sh` to include new scripts
+- [ ] Update REMOTE-QUICK-START.md to mention session management
+- [ ] Test end-to-end workflows
+
+---
+
+### 2. Feedback System with Slash Commands
 
 **Status:** Design Complete, Ready for Implementation
 
@@ -371,16 +548,17 @@ Have an idea? See [FEEDBACK-AND-FEATURES.md](FEEDBACK-AND-FEATURES.md) for how t
 
 ## Priority Guide
 
-| Priority | Features                                              |
-|----------|-------------------------------------------------------|
-| High     | Feedback system with slash commands (#1)              |
-| Medium   | Auto-reconnect (#2), Session recording (#3)           |
-| Low      | Web UI (#4), Voice chat (#5), Bots (#7)               |
-| Future   | Analytics (#11), File sync (#9)                       |
+| Priority | Features                                                          |
+|----------|-------------------------------------------------------------------|
+| High     | Session lifecycle management (#1), Feedback system (#2)           |
+| Medium   | Auto-reconnect (#3), Session recording (#4)                       |
+| Low      | Web UI (#5), Voice chat (#6), Bots (#8)                           |
+| Future   | Analytics (#12), File sync (#10), Windows native support (#9)    |
 
 ---
 
 **Last Updated:** 2025-11-27
+**Recent Changes:** Added session lifecycle management as #1 priority with complete documentation
 
 **Maintainer Notes:**
 - Review this document quarterly

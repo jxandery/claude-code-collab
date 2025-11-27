@@ -319,6 +319,94 @@ This stops Claude Code and frees up server resources.
 
 ---
 
+## Managing Session Lifecycle
+
+Understanding when to keep sessions running versus ending them helps manage server resources and maintain organization.
+
+### When to Keep Sessions Running
+
+✅ **Keep running if:**
+- Taking a short break (< 1 hour)
+- End of work day, resuming tomorrow morning
+- Active project you'll return to within 24 hours
+- Concerned about losing Claude's conversation context
+
+**Cost:** Minimal - idle tmux sessions use ~5-10MB RAM each
+
+### When to End Sessions
+
+🛑 **End session if:**
+- Project is completely finished
+- Won't use for several days
+- Multiple abandoned sessions cluttering the server
+- Server needs maintenance or restart
+- Want to free up resources
+
+### Before Ending a Session
+
+⚠️ **Important checklist:**
+
+1. **Notify all collaborators** - Make sure everyone is done
+2. **Save all work:**
+   ```bash
+   # Download files from server
+   download-from-server.sh ~/project ./local-backup/
+
+   # Or commit code if using git
+   ssh claudeteam@68.183.159.246
+   cd ~/project
+   git add .
+   git commit -m "Save work from collaboration session"
+   git push
+   exit
+   ```
+3. **Note your progress** - Document where you left off for next time
+4. **Verify everyone disconnected:**
+   ```bash
+   ssh claudeteam@68.183.159.246
+   tmux list-clients -t claude-collab
+   # Should show no clients attached
+   exit
+   ```
+
+### How to End a Session
+
+**Everyone disconnects first:**
+- Split-pane mode: Press `Ctrl+C` or close terminal
+- Simple mode: Press `Ctrl+C` in input terminal
+
+**Then host kills the session:**
+```bash
+ssh claudeteam@68.183.159.246
+tmux kill-session -t claude-collab
+exit
+```
+
+**To kill a specific session without logging in:**
+```bash
+ssh claudeteam@68.183.159.246 'tmux kill-session -t claude-collab'
+```
+
+### What Happens When You Kill a Session?
+
+⚠️ **Important:** Claude Code does NOT persist conversation history between sessions.
+
+When you kill a session:
+- ✅ Files on the server remain (in your project directory)
+- ✅ Git commits are preserved
+- ❌ Claude's conversation context is lost
+- ❌ Unsaved work in Claude's memory is lost
+
+**Next time:** You'll start with fresh context, but can reference previous work via files/commits.
+
+### Resuming After Killing a Session
+
+To start fresh later, follow [Step 2](#step-2-host---create-the-shared-claude-code-session) again to create a new session.
+
+**Pro tip:** Keep detailed git commits or notes so you can quickly catch Claude up on context when resuming.
+
+---
+
 ## Multiple Projects
 
 You can run multiple sessions for different projects:
@@ -334,6 +422,8 @@ tmux new-session -s bug-fixes
 ```
 
 Just make sure everyone connects to the same session name!
+
+**Managing multiple sessions:** Use `list-sessions.sh` to see all active sessions and clean up old ones periodically.
 
 ---
 

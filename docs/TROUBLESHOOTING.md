@@ -606,6 +606,146 @@ source ~/.zshrc  # or ~/.bashrc
 
 ---
 
+## Session Management Issues
+
+### Problem: Too many old sessions cluttering the server
+
+**Symptoms:**
+```bash
+tmux ls
+# Shows many old sessions you don't need anymore
+```
+
+**Solution: Clean up old sessions**
+
+```bash
+# List all sessions
+ssh claudeteam@68.183.159.246
+tmux ls
+
+# Kill specific old sessions
+tmux kill-session -t old-session-name
+tmux kill-session -t another-old-session
+
+# Or kill all sessions (DANGER: kills everything!)
+tmux kill-server
+```
+
+**Better approach:** Use the list-sessions utility:
+```bash
+list-sessions.sh 68.183.159.246 claudeteam
+# Shows all sessions with details
+# Then kill ones you don't need
+```
+
+---
+
+### Problem: Forgot to save work before killing session
+
+**Symptoms:**
+Session killed, work was lost.
+
+**Prevention:**
+Always follow the [session lifecycle checklist](HOST-INSTRUCTIONS.md#before-ending-a-session):
+1. Notify collaborators
+2. Save/download all work
+3. Verify everyone disconnected
+4. Then kill session
+
+**If it already happened:**
+- Check if files are still on server: `ssh user@server 'ls -la ~/project'`
+- Check git history: `ssh user@server 'cd ~/project && git log'`
+- Claude's conversation is lost (not recoverable)
+
+---
+
+### Problem: Don't know if session is still in use
+
+**Symptoms:**
+Old session exists, not sure if anyone is using it.
+
+**Solution: Check for attached clients**
+
+```bash
+ssh claudeteam@68.183.159.246
+tmux list-clients -t session-name
+# If empty, no one is connected
+```
+
+Or check session details:
+```bash
+ssh claudeteam@68.183.159.246
+tmux ls
+# Look at "created" time and "attached" count
+# Example: claude-collab: 1 windows (created Wed Nov 27 14:30:00 2025) [140x50] (attached)
+```
+
+If "(attached)" is missing, no one is connected.
+
+---
+
+### Problem: Session ended unexpectedly
+
+**Symptoms:**
+Connected to session, suddenly disconnected, session is gone.
+
+**Possible causes:**
+
+1. **Someone killed the session**
+   - Check with collaborators
+   - Recreate session following host instructions
+
+2. **Server restarted**
+   - Check server uptime: `ssh user@server 'uptime'`
+   - tmux sessions don't survive reboots
+   - Recreate session
+
+3. **tmux server crashed**
+   - Rare, but possible
+   - Check server logs: `ssh user@server 'dmesg | tail -50'`
+   - Recreate session
+
+**Recovery:**
+Follow [HOST-INSTRUCTIONS.md Step 2](HOST-INSTRUCTIONS.md#step-2-host---create-the-shared-claude-code-session) to create new session.
+
+---
+
+### Problem: Can't tell which session is for which project
+
+**Symptoms:**
+```bash
+tmux ls
+claude-collab: 1 windows ...
+session-2: 1 windows ...
+work: 1 windows ...
+# Not clear what each is for
+```
+
+**Solution: Use descriptive session names**
+
+Instead of generic names:
+```bash
+# Bad
+tmux new-session -s work
+tmux new-session -s project
+```
+
+Use descriptive names:
+```bash
+# Good
+tmux new-session -s frontend-redesign
+tmux new-session -s api-bugfix
+tmux new-session -s auth-feature
+```
+
+**Tip:** Include date or ticket number:
+```bash
+tmux new-session -s bug-1234-login-fix
+tmux new-session -s 2025-11-27-planning
+```
+
+---
+
 ## General Debugging Steps
 
 ### When something goes wrong:
