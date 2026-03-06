@@ -92,7 +92,7 @@ tmux new-session -s claude-collab
 ### D. Start Claude Code
 
 ```bash
-claude-code
+claude
 ```
 
 **Wait for:** The Claude welcome screen to load (shows "Welcome back [Your Name]!" and recent activity).

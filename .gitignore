@@ -28,3 +28,7 @@ local-config.sh
 
 # Archive (internal research/design docs not for users)
 archive/
+
+# Workspace - keep workspace-config.json, ignore local settings
+.claude/settings.local.json
+.claude/settings.local.json.bak

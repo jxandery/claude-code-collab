@@ -1,0 +1,139 @@
+#!/bin/bash
+# prepare-commit-msg hook for projects
+# 1. Removes Claude Code attribution from ALL commit messages
+# 2. Detects --no-verify and runs validation (safety net)
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2  # message, template, merge, squash, commit
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null || echo ".git")
+MARKER="$GIT_DIR/pre-commit-passed"
+
+# --- Remove Claude Code attribution ---
+if [ -f "$COMMIT_MSG_FILE" ]; then
+    TEMP_FILE=$(mktemp)
+    grep -v "🤖 Generated with \[Claude Code\]" "$COMMIT_MSG_FILE" | \
+    grep -v "Co-Authored-By: Claude <noreply@anthropic.com>" | \
+    grep -v "^Generated with \[Claude Code\]" | \
+    sed '/^$/N;/^\n$/D' > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$COMMIT_MSG_FILE"
+fi
+
+# --- --no-verify Safety Net ---
+
+# Skip for merge commits (they have their own flow)
+# Check both COMMIT_SOURCE and MERGE_HEAD existence
+if [[ "$COMMIT_SOURCE" = "merge" ]] || [[ -f "$GIT_DIR/MERGE_HEAD" ]]; then
+    rm -f "$MARKER"
+    exit 0
+fi
+
+# Detect rebase/cherry-pick operations
+# These are legitimate git operations, not manual --no-verify bypasses
+REBASE_MODE=false
+if [[ -d "$GIT_DIR/rebase-merge" ]] || [[ -d "$GIT_DIR/rebase-apply" ]]; then
+    REBASE_MODE=true
+fi
+# Also check COMMIT_SOURCE for squash (rebase squash, merge --squash)
+if [[ "$COMMIT_SOURCE" = "squash" ]]; then
+    REBASE_MODE=true
+fi
+# Check GIT_REFLOG_ACTION for cherry-pick
+case "${GIT_REFLOG_ACTION:-}" in
+    rebase*|cherry-pick|am)
+        REBASE_MODE=true
+        ;;
+esac
+
+# Check if pre-commit ran for THIS commit (PID-based detection)
+# Using PPID comparison to detect stale markers from cancelled commits
+MARKER_PID=$(cat "$MARKER" 2>/dev/null || echo "")
+rm -f "$MARKER"  # Always clean up marker
+
+if [[ "$PPID" == "$MARKER_PID" ]]; then
+    # Same git process - pre-commit ran for THIS commit
+    exit 0
+fi
+
+# --no-verify was used (or stale marker from cancelled commit)
+echo "" >&2
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+echo "⚠️  --no-verify detected" >&2
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+echo "" >&2
+
+# Run validation script
+WORKSPACE_DIR="$HOME/claude-workspace"
+VALIDATION_SCRIPT="$WORKSPACE_DIR/scripts/validate-commit-requirements.sh"
+
+VALIDATION_EXIT=0
+if [[ -f "$VALIDATION_SCRIPT" ]]; then
+    # Determine if interactive (no -m flag means message not yet written)
+    if [[ -z "$COMMIT_SOURCE" ]] || [[ "$COMMIT_SOURCE" == "template" ]]; then
+        "$VALIDATION_SCRIPT" --pre-commit --interactive >&2
+    else
+        "$VALIDATION_SCRIPT" --commit-msg-file "$COMMIT_MSG_FILE" --pre-commit >&2
+    fi
+    VALIDATION_EXIT=$?
+else
+    echo "Warning: Validation script not found at $VALIDATION_SCRIPT" >&2
+    echo "Skipping validation checks." >&2
+fi
+
+# Handle rebase mode: if validation passed, allow without TTY
+if [[ "$REBASE_MODE" = "true" ]]; then
+    if [[ $VALIDATION_EXIT -eq 0 ]]; then
+        echo "" >&2
+        echo "✓ Rebase/cherry-pick operation - validation passed" >&2
+        exit 0
+    else
+        # Validation failed during rebase - this is a problem
+        echo "" >&2
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+        echo "❌ Validation Failed During Rebase" >&2
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+        echo "" >&2
+        echo "Fix validation issues, then run: git rebase --continue" >&2
+        exit 1
+    fi
+fi
+
+echo "" >&2
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+echo "Manual Approval Required" >&2
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+echo "" >&2
+
+if [[ $VALIDATION_EXIT -ne 0 ]]; then
+    echo "You are bypassing FAILED validation checks." >&2
+    echo "This is potentially dangerous." >&2
+else
+    echo "All validation checks passed." >&2
+    echo "You are bypassing git hooks (pre-commit, commit-msg)." >&2
+fi
+echo "" >&2
+
+# Check for TTY - fail closed if no TTY
+# Use timeout to prevent hanging in test environments where /dev/tty may block
+if ! timeout 1 bash -c 'tty -s </dev/tty' 2>/dev/null; then
+    echo "❌ No TTY available - cannot prompt for approval" >&2
+    echo "   Commit aborted for safety." >&2
+    echo "" >&2
+    echo "To commit without TTY, fix validation issues first," >&2
+    echo "or remove --no-verify flag." >&2
+    exit 1
+fi
+
+# Prompt for approval (read from /dev/tty to work even when stdin is piped)
+echo -n "Approve commit with --no-verify? (y/n) " >&2
+read -t 30 -n 1 -r REPLY </dev/tty 2>/dev/null || REPLY="n"
+echo "" >&2
+
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "" >&2
+    echo "❌ Commit aborted" >&2
+    exit 1
+fi
+
+echo "" >&2
+echo "✓ Approved - proceeding with commit" >&2
+exit 0
