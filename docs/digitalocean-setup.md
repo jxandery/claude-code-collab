@@ -7,6 +7,30 @@ Set up Claude Code collaboration using DigitalOcean in about 60 minutes.
 
 ---
 
+## TL;DR (5 commands)
+
+If you know what you're doing, here's the fast path:
+
+```bash
+# 1. Create a DigitalOcean Droplet (Ubuntu 22.04, $12/mo, with your SSH key)
+# 2. Bootstrap the server:
+scp server-bootstrap.sh root@YOUR_SERVER_IP:/tmp/
+ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh'
+# 3. SSH in, authenticate Claude Code, start it in the tmux session:
+ssh claudeteam@YOUR_SERVER_IP
+tmux attach-session -t claude-collab
+claude
+# Ctrl+B, D to detach
+# 4. Add your collaborator:
+add-collaborator.sh YOUR_SERVER_IP "ssh-ed25519 AAAA...their-key..."
+# 5. Connect:
+join-claude-session-split.sh host YOUR_SERVER_IP claudeteam claude-collab
+```
+
+**New to this?** Follow the step-by-step guide below.
+
+---
+
 ## What You'll Build
 
 ```
@@ -853,6 +877,44 @@ cd ~/claude-code-collab
 ./install.sh
 source ~/.zshrc
 ```
+
+### Run the diagnostic tool
+
+For a comprehensive check of your setup:
+```bash
+diagnose.sh YOUR_SERVER_IP
+```
+
+---
+
+## Reconnecting After Disconnection
+
+If your laptop sleeps, WiFi drops, or you close the terminal — **the session is NOT lost**. The tmux session keeps running on the server.
+
+To reconnect, just run the join command again:
+```bash
+join-claude-session-split.sh YourName YOUR_SERVER_IP claudeteam claude-collab
+```
+
+All history is preserved. You'll see everything that happened while you were disconnected.
+
+---
+
+## When You're Done
+
+### End a collaboration session
+```bash
+# Clean up everything:
+teardown.sh YOUR_SERVER_IP
+```
+
+### Stop paying for the server
+1. Go to https://cloud.digitalocean.com/droplets
+2. Click your droplet name
+3. Click **Destroy** tab
+4. Confirm destruction
+
+Billing stops immediately. You'll need to set up from scratch if you want to collaborate again.
 
 ---
 

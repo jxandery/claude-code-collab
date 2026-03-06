@@ -1,19 +1,38 @@
-# Setup Guide for collaborator - Claude Code Collaboration with host
+# Setup Guide for Collaborator - Claude Code Collaboration
 
-## Overview
+## TL;DR
 
-You and host will collaborate using Claude Code with:
-- Type on your own local machine
-- Your inputs are automatically prefixed with `[collaborator]`
-- host's inputs show as `[host]`
-- Both see Claude Code's responses in real-time
-- Claude knows who asked what!
+```bash
+# 1. Run the setup wizard:
+git clone https://github.com/jxandery/claude-code-collab.git
+cd claude-code-collab
+./setup.sh   # Choose "Collaborator", enter server IP
 
-host has already set up the shared server. You just need to configure your local machine and connect.
+# 2. Send your public key to the host:
+setup-ssh.sh --show
+
+# 3. Once the host adds your key, connect:
+join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab
+```
+
+**New to this?** Follow the step-by-step guide below.
 
 ---
 
-## What host Should Give You
+## Overview
+
+You and your host will collaborate using Claude Code with:
+- Type on your own local machine
+- Your inputs are automatically prefixed with `[collaborator]`
+- Host's inputs show as `[host]`
+- Both see Claude Code's responses in real-time
+- Claude knows who asked what!
+
+Your host has already set up the shared server. You just need to configure your local machine and connect.
+
+---
+
+## What Your Host Should Give You
 
 - [ ] Server IP address (e.g., `164.92.123.456`)
 - [ ] Username: `claudeteam`
@@ -539,18 +558,47 @@ tmux attach-session -r -t claude-collab
 
 ---
 
+## Reconnecting After Disconnection
+
+If your laptop sleeps, WiFi drops, or you close the terminal — **the session is NOT lost**. Just run the join command again:
+
+```bash
+join-claude-session-split.sh collaborator SERVER_IP claudeteam claude-collab
+```
+
+All history is preserved.
+
+---
+
+## When You're Done
+
+```bash
+# Clean up your local session:
+teardown.sh --local
+
+# Or clean up everything (local + remote):
+teardown.sh SERVER_IP
+```
+
+---
+
+## Diagnosing Issues
+
+```bash
+# Run the diagnostic tool:
+diagnose.sh SERVER_IP
+```
+
+This checks SSH, tmux session, Claude Code status, and suggests fixes.
+
+---
+
 ## Next Steps Checklist
 
-- [ ] Create SSH keys (or use existing)
-- [ ] Send public key to host
-- [ ] Install tmux locally
+- [ ] Run `./setup.sh` and choose "Collaborator"
+- [ ] Send your public key to host (`setup-ssh.sh --show`)
 - [ ] Test SSH connection to server
-- [ ] Create environment variables in ~/.zshrc or ~/.bashrc
-- [ ] Create the claude-collab.sh script
-- [ ] Make script executable
-- [ ] Add ~/bin to PATH
-- [ ] Test the script: `claude-collab.sh collaborator`
-- [ ] Coordinate first session with host
+- [ ] Join the session
 - [ ] Start collaborating!
 
 ---

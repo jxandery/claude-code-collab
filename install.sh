@@ -1,7 +1,12 @@
 #!/bin/bash
 
 # Claude Code Collaboration - Installation Script
-# This installs the collaboration script for the current user
+# Installs all collaboration scripts for the current user.
+#
+# Usage:
+#   ./install.sh              # Install all scripts to ~/bin
+#
+# For a guided setup experience, use ./setup.sh instead.
 
 set -e  # Exit on error
 
@@ -30,41 +35,43 @@ fi
 echo -e "${BLUE}→ Creating ~/bin directory...${NC}"
 mkdir -p ~/bin
 
-# Copy the scripts
+# Get the directory where this script lives
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# All scripts to install
+SCRIPTS=(
+    "join-claude-session.sh"
+    "join-claude-session-split.sh"
+    "setup-ssh.sh"
+    "add-collaborator.sh"
+    "diagnose.sh"
+    "teardown.sh"
+    "start-collaboration.sh"
+    "list-sessions.sh"
+    "download-from-server.sh"
+)
+
 echo -e "${BLUE}→ Installing collaboration scripts...${NC}"
 
-# Core collaboration scripts
-cp join-claude-session.sh ~/bin/
-chmod +x ~/bin/join-claude-session.sh
-echo -e "${GREEN}  ✓ Installed join-claude-session.sh (simple mode)${NC}"
+INSTALLED=0
+for script in "${SCRIPTS[@]}"; do
+    if [ -f "$SCRIPT_DIR/$script" ]; then
+        cp "$SCRIPT_DIR/$script" ~/bin/
+        chmod +x ~/bin/"$script"
+        echo -e "${GREEN}  ✓ ${script}${NC}"
+        INSTALLED=$((INSTALLED + 1))
+    fi
+done
 
-if [ -f join-claude-session-split.sh ]; then
-    cp join-claude-session-split.sh ~/bin/
-    chmod +x ~/bin/join-claude-session-split.sh
-    echo -e "${GREEN}  ✓ Installed join-claude-session-split.sh (split-pane mode)${NC}"
-fi
-
-# Utility scripts
-if [ -f start-collaboration.sh ]; then
-    cp start-collaboration.sh ~/bin/
-    chmod +x ~/bin/start-collaboration.sh
-    echo -e "${GREEN}  ✓ Installed start-collaboration.sh (interactive wizard)${NC}"
-fi
-
-if [ -f list-sessions.sh ]; then
-    cp list-sessions.sh ~/bin/
-    chmod +x ~/bin/list-sessions.sh
-    echo -e "${GREEN}  ✓ Installed list-sessions.sh (view active sessions)${NC}"
-fi
-
-if [ -f download-from-server.sh ]; then
-    cp download-from-server.sh ~/bin/
-    chmod +x ~/bin/download-from-server.sh
-    echo -e "${GREEN}  ✓ Installed download-from-server.sh (download files)${NC}"
+if [ "$INSTALLED" -eq 0 ]; then
+    echo -e "${RED}  No scripts found to install!${NC}"
+    echo "  Make sure you're running this from the claude-code-collab directory."
+    exit 1
 fi
 
 # Check if ~/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
+    echo ""
     echo -e "${YELLOW}⚠  ~/bin is not in your PATH${NC}"
     echo ""
     echo "Adding ~/bin to PATH..."
@@ -95,31 +102,18 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║  Installation Complete! ✓              ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}Quick Start:${NC}"
+echo -e "  ${INSTALLED} scripts installed to ~/bin"
 echo ""
-echo -e "${GREEN}→ New User? Start Here:${NC}"
-echo -e "   ${YELLOW}start-collaboration.sh${NC}"
-echo -e "   Interactive wizard to set up and connect"
+echo -e "${BLUE}Available commands:${NC}"
 echo ""
-echo -e "${BLUE}Available Commands:${NC}"
+echo -e "  ${GREEN}join-claude-session-split.sh${NC}  Join with split view (recommended)"
+echo -e "  ${GREEN}join-claude-session.sh${NC}        Join with input-only mode"
+echo -e "  ${GREEN}setup-ssh.sh${NC}                  Set up or check SSH keys"
+echo -e "  ${GREEN}add-collaborator.sh${NC}           Add a collaborator's SSH key to server"
+echo -e "  ${GREEN}diagnose.sh${NC}                   Check if everything is working"
+echo -e "  ${GREEN}teardown.sh${NC}                   Clean up sessions"
 echo ""
-echo -e "${GREEN}1. start-collaboration.sh${NC}"
-echo -e "   Interactive setup - easiest for beginners"
-echo ""
-echo -e "${GREEN}2. list-sessions.sh [server-ip] [user]${NC}"
-echo -e "   View all active sessions on the server"
-echo ""
-echo -e "${GREEN}3. download-from-server.sh <remote-path> [local-path]${NC}"
-echo -e "   Download files created during collaboration"
-echo ""
-echo -e "${GREEN}4. join-claude-session-split.sh <name> <server> [user] [session]${NC}"
-echo -e "   Split-pane mode (advanced users)"
-echo ""
-echo -e "${GREEN}5. join-claude-session.sh <name> [session]${NC}"
-echo -e "   Simple mode (advanced users)"
-echo ""
-echo -e "${BLUE}Next Steps:${NC}"
-echo "  1. If PATH was updated, run: source $SHELL_RC"
-echo "  2. Run: start-collaboration.sh"
-echo "  3. See docs/ folder for detailed guides"
+echo -e "${BLUE}Quick start:${NC}"
+echo "  For guided setup:    ./setup.sh"
+echo "  For full docs:       See README.md"
 echo ""

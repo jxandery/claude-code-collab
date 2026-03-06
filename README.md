@@ -8,32 +8,24 @@ Enable multiple people to collaborate on the same Claude Code session in real-ti
 
 **Repository:** https://github.com/jxandery/claude-code-collab
 
+## TL;DR
+
+```bash
+git clone https://github.com/jxandery/claude-code-collab.git
+cd claude-code-collab
+./setup.sh    # Interactive wizard — picks the right setup for you
+```
+
+That's it. The wizard asks if you're a host or collaborator and walks you through everything.
+
+---
+
 ## What This Does
 
 - **Multiple users** can interact with one Claude Code session
 - **User attribution**: Each prompt is automatically prefixed with `[Username]`
 - **Real-time**: Everyone sees all interactions as they happen
-- **Simple setup**: Just run a script on each person's machine
-
-## Two Ways to Collaborate
-
-### ⚡ tmate (Quick Start - 5 minutes)
-**Best for:** Testing, demos, quick sessions
-- Zero networking setup required
-- Works instantly from anywhere
-- Free forever
-- Manual username prefixing
-- [→ tmate setup guide](docs/tmate-setup.md)
-
-### 🚀 SSH+tmux (Professional Setup - 30-60 minutes)
-**Best for:** Regular collaboration, better UX
-- Automatic username prefixing
-- Split-screen interface (view/input separated)
-- Requires cloud server ($12/mo) or your Mac with port forwarding
-- Full control and privacy
-- [→ SSH+tmux setup guide](docs/setup-for-host.md)
-
-**Not sure which to choose?** See the [detailed comparison guide](docs/tmate-vs-ssh-tmux.md).
+- **Simple setup**: Run the setup wizard and follow the prompts
 
 ## Demo
 
@@ -48,178 +40,149 @@ Host's Terminal            Shared Claude Code           Collaborator's Terminal
                           └────────────────────┘
 ```
 
-Claude sees:
-```
-[host] Add authentication
-[collaborator] Can we use JWT?
-[host] Yes, let's do that
-```
-
 ---
 
-## Quick Start
+## Getting Started
 
-### Local Testing (Single Machine)
+### Option 1: Setup Wizard (Recommended)
 
-> **⚠️ SECURITY WARNING**: Local testing on your machine should ONLY be used for testing the concept yourself. DO NOT allow external collaborators to access your local machine as this grants them full system access, including all your files, credentials, SSH keys, and the ability to execute any commands with your user privileges. For actual collaboration, always use a dedicated cloud server (DigitalOcean, AWS, etc.).
-
-Test the concept on your own machine before setting up with colleagues:
-
-**Terminal 1: Shared Claude Code View**
 ```bash
-tmux new-session -s test-collab
-claude-code
-# Ctrl+B, D to detach
+./setup.sh
 ```
 
-**Terminal 2: Your Input (as "host")**
-```bash
-./join-claude-session.sh host
-```
+The wizard will:
+1. Ask your role (host, collaborator, or local test)
+2. Check prerequisites (tmux, SSH)
+3. Set up SSH keys if needed
+4. Install all scripts
+5. Give you the exact commands to run
 
-**Terminal 3: Simulate Another User (as "collaborator")**
-```bash
-./join-claude-session.sh collaborator
-```
+### Option 2: Quick Local Test
 
-Type in Terminal 2 and 3, watch responses in Terminal 1!
-
-**📖 For detailed local testing guide, see [QUICK-TEST-LOCAL-MAC.md](docs/QUICK-TEST-LOCAL-MAC.md)**
-
----
-
-## Installation (Per User)
-
-Each collaborator runs this on their own machine:
-
-### Option 1: Automated Install
+Try the concept on your own machine in 2 minutes:
 
 ```bash
-# Clone the repo
-git clone https://github.com/jxandery/claude-code-collab.git
-cd claude-code-collab
-
-# Run installer
-./install.sh
-
-# If PATH was updated, reload shell
-source ~/.zshrc  # or ~/.bashrc
-```
-
-### Option 2: Manual Install
-
-```bash
-# Clone the repo
-git clone https://github.com/jxandery/claude-code-collab.git
-
-# Copy script to ~/bin
-mkdir -p ~/bin
-cp claude-code-collab/join-claude-session.sh ~/bin/
-chmod +x ~/bin/join-claude-session.sh
-
-# Add ~/bin to PATH (if not already)
-echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-```
-
----
-
-## Usage
-
-### For Local Testing (Same Machine)
-
-> **⚠️ SECURITY WARNING**: This is for local testing only. Never allow remote users to access your local machine.
-
-**Step 1: Create shared session**
-```bash
+# Terminal 1: Start shared session
 tmux new-session -s test-collab
 claude-code
 # Press Ctrl+B, then D to detach
+
+# Terminal 2: Join as "host"
+./join-claude-session.sh host test-collab
+
+# Terminal 3: Join as "collaborator"
+./join-claude-session.sh collaborator test-collab
 ```
 
-**Step 2: Open multiple terminals**
+Type in Terminal 2 or 3 — watch it appear with `[host]` or `[collaborator]` prefix!
 
-Terminal 1 (Shared View):
+### Option 3: Remote Collaboration
+
+**Host** sets up a cloud server (one-time, ~30 min):
 ```bash
-tmux attach-session -t test-collab
+# 1. Create a DigitalOcean droplet ($12/mo, $200 free credit for new users)
+# 2. Bootstrap the server:
+scp server-bootstrap.sh root@YOUR_SERVER_IP:/tmp/
+ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh'
+# 3. Connect:
+join-claude-session-split.sh host YOUR_SERVER_IP claudeteam claude-collab
 ```
 
-Terminal 2 (Host):
+**Collaborator** just connects (~5 min):
 ```bash
-join-claude-session.sh host
-```
-
-Terminal 3 (Collaborator):
-```bash
-join-claude-session.sh collaborator
-```
-
-### For Remote Collaboration (Different Machines)
-
-**Step 1: Set up shared server** (One person does this)
-- See [setup-for-host.md](docs/setup-for-host.md) for detailed host setup
-- See [setup-for-collaborator.md](docs/setup-for-collaborator.md) for collaborator setup instructions
-- Or use the quick version below
-
-**Step 2: Each collaborator connects**
-
-On shared server (first time only):
-```bash
-ssh yourteam@shared-server.com
-tmux new-session -s claude-collab
-claude-code
-# Ctrl+B, D to detach
-```
-
-On each person's local machine:
-```bash
-# Method 1: Use your name explicitly
-ssh yourteam@shared-server.com
-join-claude-session.sh YourName claude-collab
-
-# Method 2: Let it use your hostname
-join-claude-session.sh
+./setup.sh   # Choose "collaborator", enter server IP, done
+join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab
 ```
 
 ---
 
-## Command Line Options
+## Available Scripts
 
+| Script | What it does |
+|--------|-------------|
+| `setup.sh` | Interactive setup wizard |
+| `install.sh` | Install all scripts to `~/bin` |
+| `join-claude-session-split.sh` | Join session with split view (recommended) |
+| `join-claude-session.sh` | Join session with input-only mode |
+| `setup-ssh.sh` | Detect/create SSH keys |
+| `add-collaborator.sh` | Add a collaborator's SSH key to the server |
+| `server-bootstrap.sh` | One-command server setup (run on Ubuntu server) |
+| `diagnose.sh` | Check if everything is working |
+| `teardown.sh` | Clean up sessions |
+
+---
+
+## Troubleshooting
+
+Run the diagnostic tool first:
 ```bash
-# Use hostname as username (default)
-join-claude-session.sh
-
-# Specify username
-join-claude-session.sh host
-
-# Specify username and session name
-join-claude-session.sh host my-session
-
-# Custom session (useful for multiple projects)
-join-claude-session.sh collaborator project-alpha
+diagnose.sh                    # Check local setup
+diagnose.sh YOUR_SERVER_IP     # Check local + remote
 ```
+
+<details>
+<summary>Common issues and fixes</summary>
+
+### "tmux: command not found"
+```bash
+brew install tmux       # macOS
+sudo apt install tmux   # Linux
+```
+
+### "Session not found"
+```bash
+# Check what sessions exist
+tmux ls
+
+# Create the session
+tmux new-session -s test-collab
+claude-code
+# Ctrl+B, D to detach
+```
+
+### "Permission denied (publickey)"
+```bash
+# See which key SSH is trying to use
+setup-ssh.sh --check YOUR_SERVER_IP
+
+# Show your public key to send to the host
+setup-ssh.sh --show
+```
+
+### Disconnected? Just reconnect
+```bash
+# The session keeps running even if you disconnect.
+# Simply run the join command again:
+join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab
+```
+
+### Scripts not found after install
+```bash
+source ~/.zshrc   # or ~/.bashrc
+# Scripts are in ~/bin — this adds it to your PATH
+```
+
+</details>
+
+---
+
+## tmux Cheatsheet
+
+tmux is the terminal multiplexer that makes this work. Here's what you need to know:
+
+| Action | Keys | What happens |
+|--------|------|-------------|
+| **Detach** (leave session running) | `Ctrl+B`, then `D` | You exit but session keeps running |
+| **Scroll up** | `Ctrl+B`, then `[`, then arrow keys | View history. Press `q` to exit scroll |
+| **Switch panes** | `Ctrl+B`, then arrow keys | Move between split panes |
+| **Exit input loop** | `Ctrl+C` | Stops the input script (session keeps running) |
+
+**Key concept:** Detaching is NOT the same as closing. When you detach (`Ctrl+B, D`), the session continues in the background. You can reconnect later.
 
 ---
 
 ## Architecture
 
-### Local Testing Setup (⚠️ For Testing Only - Security Risk for Real Collaboration)
-```
-┌─────────────────────────────────────────────────────┐
-│         Your Mac (⚠️ TESTING ONLY)                  │
-│                                                     │
-│  Terminal 1       Terminal 2       Terminal 3       │
-│  ┌──────────┐    ┌─────────┐    ┌──────────────┐    │
-│  │  Claude  │<-- │  Host   │    │ Collaborator │    │
-│  │   Code   │    │ Input   │    │    Input     │    │
-│  └──────────┘    └─────────┘    └──────────────┘    │
-│       ▲                │                 │          │
-│       └────────────────┴─────────────────┘          │
-│                  tmux session                       │
-└─────────────────────────────────────────────────────┘
-```
-
-### Remote Collaboration Setup
 ```
 Host's Machine           Shared Server         Collaborator's Machine
 ┌──────────────┐        ┌───────────────┐        ┌──────────────────┐
@@ -230,62 +193,10 @@ Host's Machine           Shared Server         Collaborator's Machine
                         └───────────────┘
 ```
 
----
+<details>
+<summary>How it works under the hood</summary>
 
-## Requirements
-
-- **tmux** (install: `brew install tmux`)
-- **Claude Code** (installed and authenticated)
-- **Bash** (macOS and Linux default shell)
-- **SSH access** to shared server (for remote collaboration)
-
----
-
-## Troubleshooting
-
-### "tmux: command not found"
-```bash
-brew install tmux
-# Then reload shell
-source ~/.zshrc
-```
-
-### "Session not found"
-Create the session first:
-```bash
-tmux new-session -s test-collab
-claude-code
-# Ctrl+B, D to detach
-```
-
-### Messages not appearing in Claude
-Make sure you're using the correct session name:
-```bash
-# Check what sessions exist
-tmux ls
-
-# Use the correct name
-join-claude-session.sh YourName your-session-name
-```
-
-### ~/bin not in PATH
-```bash
-# Add to your shell config
-echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-### Script shows hostname instead of my name
-Specify your name explicitly:
-```bash
-join-claude-session.sh YourName
-```
-
----
-
-## How It Works
-
-1. **One shared tmux session** runs Claude Code
+1. **One shared tmux session** runs Claude Code on a server
 2. **Each user runs a script** on their machine that:
    - Prompts for input
    - Automatically prefixes input with `[Username]`
@@ -299,6 +210,59 @@ join-claude-session.sh YourName
 - **Remote friendly**: Works great over SSH
 - **No special server needed**: Just a regular Linux/Mac terminal
 
+</details>
+
+---
+
+## When You're Done
+
+```bash
+# Clean up local sessions
+teardown.sh
+
+# Clean up local + remote
+teardown.sh YOUR_SERVER_IP
+
+# To stop paying for the server:
+# Go to DigitalOcean dashboard → Droplets → Destroy
+```
+
+---
+
+## FAQ
+
+<details>
+<summary>Can more than 2 people collaborate?</summary>
+
+Yes! Each person just runs the join script with their name. All messages appear in the shared session.
+</details>
+
+<details>
+<summary>How much does it cost?</summary>
+
+- **Local testing**: Free
+- **Remote collaboration**: $12/month for a DigitalOcean server (split = $6/each)
+- New DigitalOcean users get $200 free credit (60 days free)
+</details>
+
+<details>
+<summary>Is this officially supported by Anthropic?</summary>
+
+No, this is a community tool using tmux for terminal sharing. It sends keystrokes to a shared terminal session.
+</details>
+
+<details>
+<summary>What if I get disconnected?</summary>
+
+Just run the join command again. The tmux session keeps running on the server even when everyone disconnects. All history is preserved.
+</details>
+
+<details>
+<summary>Can we work asynchronously?</summary>
+
+The tmux session persists, so you can collaborate async. But for best experience, work together in real-time with voice chat (Zoom/Discord/Slack).
+</details>
+
 ---
 
 ## File Structure
@@ -306,149 +270,49 @@ join-claude-session.sh YourName
 ```
 claude-code-collab/
 ├── README.md                          # This file
+├── setup.sh                           # Interactive setup wizard
+├── install.sh                         # Script installer
+├── server-bootstrap.sh                # One-command server setup
+├── join-claude-session.sh             # Simple input mode
+├── join-claude-session-split.sh       # Split-pane mode (recommended)
+├── setup-ssh.sh                       # SSH key setup helper
+├── add-collaborator.sh                # Add collaborator SSH key
+├── diagnose.sh                        # Diagnostic tool
+├── teardown.sh                        # Cleanup tool
 ├── LICENSE                            # MIT License
-├── .gitignore                         # Git ignore file
-├── install.sh                         # Automated installer
-├── join-claude-session.sh             # Main collaboration script
-└── docs/                              # Documentation
-    ├── setup-for-host.md              # Detailed setup guide (host)
-    ├── setup-for-collaborator.md      # Setup guide (collaborator)
-    └── QUICK-TEST-LOCAL-MAC.md        # Local testing guide
+└── docs/                              # Detailed guides
+    ├── digitalocean-setup.md          # Full DigitalOcean walkthrough
+    ├── setup-for-host.md              # Host setup guide
+    ├── setup-for-collaborator.md      # Collaborator setup guide
+    ├── QUICK-TEST-LOCAL-MAC.md        # Local testing guide
+    ├── tmate-setup.md                 # tmate quick-start guide
+    └── tmate-vs-ssh-tmux.md           # Comparison guide
 ```
-
----
-
-## FAQ
-
-### Can more than 2 people collaborate?
-Yes! Each person just runs `join-claude-session.sh TheirName` and all messages appear in the shared session.
-
-### Do we need to be on the same network?
-No. For remote collaboration, you need a shared server (cloud VM or one person's machine with SSH access).
-
-### Can we use different Claude Code subscriptions?
-Only one Claude Code instance runs (on the shared server). You share that one subscription.
-
-### How much does it cost?
-- **Local testing**: Free (just uses your existing Claude Code)
-- **Remote collaboration**: $0-12/month for a small cloud server (e.g., DigitalOcean)
-
-### Is this officially supported by Anthropic?
-No, this is a community workaround using tmux for terminal sharing. It's a simple script that sends keystrokes to a shared terminal session.
-
-### Can we work asynchronously?
-The tmux session persists, so you can collaborate async. But for best experience, work together in real-time with voice chat.
-
----
-
-## Advanced Usage
-
-### Multiple Projects
-
-Create different sessions for different projects:
-
-```bash
-# Project 1
-tmux new-session -s project-alpha
-claude-code
-# Ctrl+B, D
-
-# Project 2
-tmux new-session -s project-beta
-claude-code
-# Ctrl+B, D
-
-# Connect to specific project
-join-claude-session.sh host project-alpha
-join-claude-session.sh collaborator project-beta
-```
-
-### Custom Usernames
-
-Get creative with usernames for clarity:
-
-```bash
-join-claude-session.sh alice-frontend
-join-claude-session.sh bob-backend
-join-claude-session.sh sarah-pm
-```
-
-### Voice Coordination
-
-For best experience, use voice chat (Zoom/Discord/Slack) while collaborating:
-
-```
-Host (voice): "Let me ask about authentication"
-Host (types): Add JWT authentication
-[Everyone sees Claude's response]
-
-Collaborator (voice): "Can I ask about error handling?"
-Collaborator (types): How should we handle auth failures?
-[Everyone sees Claude's response]
-```
-
----
-
-## Comparison with Alternatives
-
-| Approach | Pros | Cons | Cost |
-|----------|------|------|------|
-| **This (tmux + script)** | Simple, works today, real attribution | Requires shared server | $0-12/mo |
-| Screen share | Zero setup | Passive for viewers | Free |
-| VS Code Live Share | Good for code review | Only host controls Claude | Free |
-| Git + docs | Works async | No real-time, manual process | Free |
-| Custom web app | Purpose-built | Months of development | High |
-
----
-
-## Contributing
-
-Ideas for improvements:
-
-- [ ] Support for Windows (WSL)
-- [ ] Web UI for easier access
-- [ ] Session recording/playback
-- [ ] Better conflict resolution for simultaneous input
-- [ ] Integration with Slack/Discord bots
-
-Pull requests welcome!
-
----
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file
-
----
-
-## Credits
-
-Created to solve real-time Claude Code collaboration for distributed teams. Inspired by classic pair programming and terminal multiplexing.
 
 ---
 
 ## Documentation
 
-- **[Local Testing Guide](docs/QUICK-TEST-LOCAL-MAC.md)** - Test on your Mac before remote setup
-- **[Host Setup Guide](docs/setup-for-host.md)** - Detailed server setup instructions
-- **[Collaborator Setup Guide](docs/setup-for-collaborator.md)** - Instructions for joining an existing setup
+| Guide | Audience | Time |
+|-------|----------|------|
+| [DigitalOcean Setup](docs/digitalocean-setup.md) | Host (full walkthrough) | 60 min |
+| [Host Setup](docs/setup-for-host.md) | Host (general) | 30-60 min |
+| [Collaborator Setup](docs/setup-for-collaborator.md) | Collaborator | 15-20 min |
+| [Local Testing](docs/QUICK-TEST-LOCAL-MAC.md) | Anyone (demo) | 10-15 min |
+| [tmate Setup](docs/tmate-setup.md) | Quick sharing | 5 min |
+| [tmate vs SSH+tmux](docs/tmate-vs-ssh-tmux.md) | Decision guide | — |
 
 ---
+
+## Contributing
+
+Pull requests welcome! See [ideas for improvements](https://github.com/jxandery/claude-code-collab/issues).
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file
 
 ## Support
 
-- **Issues**: Open an issue on GitHub
-- **Discussions**: Use GitHub Discussions for questions
-- **Documentation**: See the `/docs` folder for detailed guides
-
----
-
-## Related Projects
-
-- [tmate](https://tmate.io/) - Instant terminal sharing
-- [tmux](https://github.com/tmux/tmux) - Terminal multiplexer
-- [Claude Code](https://claude.ai/code) - AI pair programming tool
-
----
-
-**Built with ❤️ for better collaboration**
+- **Issues**: [GitHub Issues](https://github.com/jxandery/claude-code-collab/issues)
+- **Diagnostics**: Run `diagnose.sh` for self-service troubleshooting

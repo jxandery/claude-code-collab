@@ -1,19 +1,27 @@
 #!/bin/bash
 
 # Claude Code Collaboration Script - Split Pane Mode
-# Shows Claude Code output and your input in one terminal window
+# Shows Claude Code output (top) and your input (bottom) in one terminal window.
 #
-# Usage: join-claude-session-split.sh [username] [server] [remote-user] [session]
+# Usage:
+#   join-claude-session-split.sh <username> <server-ip> [remote-user] [session]
+#   join-claude-session-split.sh --debug <username> <server-ip> [remote-user] [session]
 #
 # Examples:
 #   join-claude-session-split.sh jack 68.183.159.246 claudeteam claude-collab
-#   join-claude-session-split.sh collaborator 68.183.159.246 claudeteam claude-collab
+#   join-claude-session-split.sh collaborator 68.183.159.246
 #
 # Or set environment variables:
 #   export COLLAB_HOST="68.183.159.246"
 #   export COLLAB_REMOTE_USER="claudeteam"
 #   export COLLAB_SESSION="claude-collab"
 #   join-claude-session-split.sh jack
+
+DEBUG=0
+if [ "$1" = "--debug" ]; then
+    DEBUG=1
+    shift
+fi
 
 USER_NAME="${1}"
 REMOTE_HOST="${2:-${COLLAB_HOST}}"
@@ -53,15 +61,65 @@ if ! command -v tmux &> /dev/null; then
     exit 1
 fi
 
+# Detect OS for sed compatibility
+SED_INPLACE=(-i '')
+if [[ "$(uname -s)" == "Linux" ]]; then
+    SED_INPLACE=(-i)
+fi
+
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
+DIM='\033[2m'
 NC='\033[0m'
 
 echo -e "${GREEN}╔═══════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║  Claude Code Collaboration - Split View   ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════╝${NC}"
+echo ""
+
+# ─── Health checks ───
+
+echo -e "${BLUE}Checking connection...${NC}"
+
+# Test SSH connection
+if ssh -o ConnectTimeout=5 -o BatchMode=yes "${REMOTE_USER}@${REMOTE_HOST}" "exit" 2>/dev/null; then
+    echo -e "${GREEN}  ✓${NC} SSH connection to ${REMOTE_HOST}"
+else
+    echo -e "${RED}  ✗${NC} Cannot connect to ${REMOTE_USER}@${REMOTE_HOST}"
+    echo ""
+    echo "  Possible fixes:"
+    echo "  1. Check the server IP is correct"
+    echo "  2. Run: setup-ssh.sh --check ${REMOTE_HOST}"
+    echo "  3. Ask your host if the server is running"
+    exit 1
+fi
+
+# Check tmux session exists on remote
+if ssh -o ConnectTimeout=5 "${REMOTE_USER}@${REMOTE_HOST}" "tmux has-session -t ${SESSION} 2>/dev/null" 2>/dev/null; then
+    echo -e "${GREEN}  ✓${NC} tmux session '${SESSION}' is running"
+else
+    echo -e "${RED}  ✗${NC} tmux session '${SESSION}' not found on server"
+    echo ""
+    echo "  Ask your host to start it:"
+    echo "    ssh ${REMOTE_USER}@${REMOTE_HOST}"
+    echo "    tmux new-session -s ${SESSION} -d"
+    echo "    tmux send-keys -t ${SESSION} 'claude' C-m"
+    exit 1
+fi
+
+# Check if Claude Code is running (best effort)
+REMOTE_CONTENT=$(ssh -o ConnectTimeout=5 "${REMOTE_USER}@${REMOTE_HOST}" "tmux capture-pane -t ${SESSION} -p 2>/dev/null" 2>/dev/null || echo "")
+if echo "$REMOTE_CONTENT" | grep -qiE 'claude|❯|>'; then
+    echo -e "${GREEN}  ✓${NC} Claude Code appears to be running"
+else
+    echo -e "${YELLOW}  ⚠${NC} Could not confirm Claude Code is running"
+    echo -e "${DIM}    (It may still be fine — check after connecting)${NC}"
+fi
+
+echo ""
 echo -e "${BLUE}User:${NC}         ${USER_NAME}"
 echo -e "${BLUE}Server:${NC}       ${REMOTE_HOST}"
 echo -e "${BLUE}Remote User:${NC}  ${REMOTE_USER}"
@@ -82,61 +140,61 @@ tmux -f /dev/null new-session -d -s "$LOCAL_SESSION" -n main
 TOP_PANE=$(tmux list-panes -t "${LOCAL_SESSION}:main" -F "#{pane_id}" | head -1)
 
 # Split: -v creates vertical split (top/bottom), -p 30 makes new pane 30%
-# After split-window -v: new pane is BELOW and becomes active
-# We want: top=Claude view (70%), bottom=input (30%)
 tmux split-window -v -t "${LOCAL_SESSION}:main" -p 30
 
 # Capture the pane ID of the new pane (will be bottom pane)
 BOTTOM_PANE=$(tmux list-panes -t "${LOCAL_SESSION}:main" -F "#{pane_id}" | tail -1)
 
-# Now we have reliable pane IDs regardless of pane-base-index setting:
-# - TOP_PANE = top (original pane, 70%) - for Claude session view
-# - BOTTOM_PANE = bottom (new pane, 30%) - for input script
-
-# Select top pane explicitly and send SSH command
+# Top pane: SSH to shared session (read-only view)
 tmux select-pane -t "$TOP_PANE"
-echo -e "${YELLOW}Connecting to shared Claude Code session...${NC}"
 tmux send-keys -t "$TOP_PANE" \
     "echo 'Connecting to ${REMOTE_HOST}...'; ssh -t ${REMOTE_USER}@${REMOTE_HOST} 'tmux attach-session -r -t ${SESSION}'" C-m
 
 # Give it a moment to connect
 sleep 2
 
-# Bottom pane (pane 1): Create a temporary input script
+# Bottom pane: Create a temporary input script
+# Using heredoc with variable expansion to avoid sed placeholder replacement
 TEMP_SCRIPT="/tmp/claude-collab-input-${USER_NAME}.sh"
-cat > "$TEMP_SCRIPT" << 'SCRIPT_END'
-#!/bin/bash
-USER_NAME="USER_NAME_PLACEHOLDER"
-REMOTE_USER="REMOTE_USER_PLACEHOLDER"
-REMOTE_HOST="REMOTE_HOST_PLACEHOLDER"
-SESSION="SESSION_PLACEHOLDER"
 
+cat > "$TEMP_SCRIPT" << EOF
+#!/bin/bash
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+DIM='\033[2m'
 NC='\033[0m'
 
-echo -e "${GREEN}=== Your Input Terminal ===${NC}"
+echo -e "\${GREEN}=== Your Input Terminal ===\${NC}"
 echo "Type your prompts below. They will be prefixed with [${USER_NAME}]"
-echo "Press Ctrl+C to exit"
 echo ""
+echo -e "\${DIM}  Ctrl+C     = exit input (session keeps running)\${NC}"
+echo -e "\${DIM}  Ctrl+B, D  = detach from tmux entirely\${NC}"
+echo ""
+
+cleanup() {
+    echo ""
+    echo -e "\${GREEN}Disconnected. The shared session is still running.\${NC}"
+    echo "To rejoin: join-claude-session-split.sh ${USER_NAME} ${REMOTE_HOST} ${REMOTE_USER} ${SESSION}"
+    exit 0
+}
+trap cleanup INT
 
 while true; do
     read -e -p "[${USER_NAME}]> " input
-    if [ -n "$input" ]; then
-        # Escape single quotes in input
-        escaped_input=$(printf %s "$input" | sed "s/'/'\\\\\''/g")
-        # Send text and Enter as one command to avoid SSH escaping issues
-        ssh ${REMOTE_USER}@${REMOTE_HOST} "tmux send-keys -t ${SESSION} '[${USER_NAME}] ${escaped_input}' && tmux send-keys -t ${SESSION} Enter"
+    if [ -n "\$input" ]; then
+        # Escape single quotes in input for safe transmission
+        escaped_input=\$(printf '%s' "\$input" | sed "s/'/'\\\\\\\\''/g")
+        if ! ssh ${REMOTE_USER}@${REMOTE_HOST} "tmux send-keys -t ${SESSION} '[${USER_NAME}] \${escaped_input}' && tmux send-keys -t ${SESSION} Enter" 2>/dev/null; then
+            echo -e "\${YELLOW}  Failed to send. Check connection.\${NC}"
+            echo "  Try: ssh ${REMOTE_USER}@${REMOTE_HOST} 'tmux ls'"
+        fi
     fi
 done
-SCRIPT_END
-
-# Replace placeholders
-sed -i '' "s/USER_NAME_PLACEHOLDER/${USER_NAME}/g" "$TEMP_SCRIPT"
-sed -i '' "s/REMOTE_USER_PLACEHOLDER/${REMOTE_USER}/g" "$TEMP_SCRIPT"
-sed -i '' "s/REMOTE_HOST_PLACEHOLDER/${REMOTE_HOST}/g" "$TEMP_SCRIPT"
-sed -i '' "s/SESSION_PLACEHOLDER/${SESSION}/g" "$TEMP_SCRIPT"
+EOF
 
 chmod +x "$TEMP_SCRIPT"
+
+[ "$DEBUG" -eq 1 ] && echo "[debug] Temp script: $TEMP_SCRIPT" && cat "$TEMP_SCRIPT"
 
 # Run the script in bottom pane
 tmux select-pane -t "$BOTTOM_PANE"

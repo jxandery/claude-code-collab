@@ -1,8 +1,35 @@
-# Setup Guide for host - Claude Code Collaboration with collaborator
+# Setup Guide for Host - Claude Code Collaboration
+
+## TL;DR
+
+```bash
+# 1. Run the setup wizard (handles SSH keys + script install):
+./setup.sh   # Choose "Host"
+
+# 2. Bootstrap your server (DigitalOcean or AWS):
+scp server-bootstrap.sh root@YOUR_SERVER_IP:/tmp/
+ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh'
+
+# 3. Authenticate Claude Code on the server:
+ssh claudeteam@YOUR_SERVER_IP
+tmux attach-session -t claude-collab
+claude
+# Ctrl+B, D to detach
+
+# 4. Add your collaborator's SSH key:
+add-collaborator.sh YOUR_SERVER_IP "ssh-ed25519 AAAA...their-key..."
+
+# 5. Connect:
+join-claude-session-split.sh host YOUR_SERVER_IP claudeteam claude-collab
+```
+
+**New to this?** Follow the step-by-step guide below.
+
+---
 
 ## Overview
 
-You and collaborator will be able to:
+You and your collaborator will be able to:
 - Type on your own local machines
 - Your inputs are automatically prefixed: `[host]` and `[collaborator]`
 - Both see Claude Code's responses in real-time

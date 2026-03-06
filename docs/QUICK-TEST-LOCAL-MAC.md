@@ -1,19 +1,25 @@
 # Quick Test Setup - Local Mac Only (No Cloud Server)
 
-> **⚠️ CRITICAL SECURITY WARNING**
->
-> This guide is for **LOCAL TESTING ONLY** using multiple terminal windows on **YOUR OWN MACHINE**.
->
-> **DO NOT use your local Mac for real collaboration with other people!**
->
-> Allowing remote access to your local machine would give collaborators:
-> - Full access to all your files, credentials, and SSH keys
-> - Ability to execute any commands with your user privileges
-> - Access to sensitive data, API tokens, and cloud credentials
-> - Potential to install malware or create backdoors
-> - Access to your local network and other systems
->
-> **For actual collaboration, you MUST use a dedicated cloud server (DigitalOcean, AWS, etc.).**
+## TL;DR
+
+```bash
+# 1. Start a shared session
+tmux new-session -s test-collab
+claude-code
+# Press Ctrl+B, then D to detach
+
+# 2. Terminal 1 — join as "host"
+./join-claude-session.sh host test-collab
+
+# 3. Terminal 2 — join as "collaborator"
+./join-claude-session.sh collaborator test-collab
+
+# 4. Type in either terminal, watch it appear with [name] prefix!
+```
+
+---
+
+> **Note:** This guide is for **local testing only** using multiple terminal windows on your own machine. For real collaboration with others, use a cloud server (see [DigitalOcean setup](digitalocean-setup.md)).
 
 ## Purpose
 

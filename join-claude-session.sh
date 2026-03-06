@@ -38,35 +38,66 @@ fi
 if ! $TMUX_BIN list-sessions 2>/dev/null | grep -q "^${SESSION}:"; then
     echo "Error: tmux session '${SESSION}' not found!"
     echo ""
-    echo "Please create the shared session first:"
+    echo "Available sessions:"
+    $TMUX_BIN list-sessions 2>/dev/null || echo "  (none)"
+    echo ""
+    echo "To create the shared session:"
     echo "  tmux new-session -s ${SESSION}"
     echo "  claude-code"
-    echo ""
-    echo "Then detach (Ctrl+B, D) and run this script again."
+    echo "  # Press Ctrl+B, then D to detach"
     exit 1
 fi
 
-# Colors for nice output
+# Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+DIM='\033[2m'
 NC='\033[0m'
 
+# Health check
 echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║  Claude Code Collaboration Mode        ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "${GREEN}  ✓${NC} tmux session '${SESSION}' found"
+
+# Check if Claude Code appears to be running in the session
+SESSION_CONTENT=$($TMUX_BIN capture-pane -t "$SESSION" -p 2>/dev/null || echo "")
+if echo "$SESSION_CONTENT" | grep -qiE 'claude|❯|>'; then
+    echo -e "${GREEN}  ✓${NC} Claude Code appears to be running"
+else
+    echo -e "${YELLOW}  ⚠${NC} Could not confirm Claude Code is running"
+    echo -e "${DIM}    (It may still be fine — check the view terminal)${NC}"
+fi
+
+echo ""
 echo -e "${BLUE}User:${NC}    ${USER_NAME}"
 echo -e "${BLUE}Session:${NC} ${SESSION}"
 echo ""
 echo -e "${YELLOW}Your prompts will be prefixed with [${USER_NAME}]${NC}"
-echo -e "${YELLOW}Press Ctrl+C to exit${NC}"
 echo ""
+echo -e "${DIM}  Ctrl+C     = exit this input script${NC}"
+echo -e "${DIM}  Ctrl+B, D  = detach from tmux (session keeps running)${NC}"
+echo ""
+
+# Graceful exit on Ctrl+C
+cleanup() {
+    echo ""
+    echo -e "${GREEN}Disconnected. The shared session is still running.${NC}"
+    echo -e "To rejoin: ${YELLOW}join-claude-session.sh ${USER_NAME} ${SESSION}${NC}"
+    exit 0
+}
+trap cleanup INT
 
 # Main input loop
 while true; do
     read -e -p "[${USER_NAME}]> " input
     if [ -n "$input" ]; then
-        $TMUX_BIN send-keys -t $SESSION "[${USER_NAME}] $input"
-        $TMUX_BIN send-keys -t $SESSION Enter
+        if ! $TMUX_BIN send-keys -t "$SESSION" "[${USER_NAME}] $input" 2>/dev/null || \
+           ! $TMUX_BIN send-keys -t "$SESSION" Enter 2>/dev/null; then
+            echo -e "${YELLOW}  ⚠ Could not send to session. It may have ended.${NC}"
+            echo "  Check with: tmux ls"
+        fi
     fi
 done

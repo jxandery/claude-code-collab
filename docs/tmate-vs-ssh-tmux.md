@@ -319,7 +319,7 @@ Host's view:                    Collaborator's view:
 
 - **tmate Setup:** See [tmate-setup.md](tmate-setup.md)
 - **SSH+tmux with Cloud Server:** See [setup-for-host.md](setup-for-host.md)
-- **SSH+tmux with Your Mac:** See [setup-using-your-mac.md](setup-using-your-mac.md)
+- **SSH+tmux with Your Mac:** See [QUICK-TEST-LOCAL-MAC.md](QUICK-TEST-LOCAL-MAC.md) (local testing only)
 - **Local Testing (same machine):** See [QUICK-TEST-LOCAL-MAC.md](QUICK-TEST-LOCAL-MAC.md)
 
 ---
