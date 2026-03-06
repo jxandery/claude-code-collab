@@ -461,22 +461,66 @@ The **experience is identical**, but the security model is completely different!
 
 ---
 
-## Ready to Demo?
+## Testing All the Tools
+
+After running `./install.sh` or `./setup.sh`, you can verify the full toolset locally:
+
+### 1. Test the utility scripts (no tmux session needed)
 
 ```bash
-# Step 1: Start shared session
-tmux new-session -s test-collab
-claude-code
-# Ctrl+B, then D to detach
+# Check your SSH key setup
+setup-ssh.sh --show
 
-# Step 2: Open two terminals
-# Terminal 1:
-~/bin/claude-test-local.sh host
+# Run the diagnostic tool (local checks only)
+diagnose.sh
 
-# Terminal 2:
-~/bin/claude-test-local.sh collaborator
-
-# Step 3: Start typing in each and watch the magic! ✨
+# See the setup wizard
+./setup.sh   # Choose option 3 (local test)
 ```
 
-Good luck with your demo! This should really impress your colleagues.
+### 2. Test the collaboration flow
+
+```bash
+# Terminal 1: Start shared session
+tmux new-session -s test-collab
+claude
+# Press Ctrl+B, then D to detach
+
+# Terminal 2: Join as host
+join-claude-session.sh host test-collab
+# You should see:
+#   ✓ tmux session 'test-collab' found
+#   [host]>
+
+# Terminal 3: Join as collaborator
+join-claude-session.sh collaborator test-collab
+```
+
+Type a message in Terminal 2 or 3 — watch it appear with the `[host]` or `[collaborator]` prefix in Terminal 1.
+
+### 3. Test the health checks
+
+- On connect, you should see `✓ tmux session 'test-collab' found`
+- Press `Ctrl+C` in the input terminal — you should see a reconnection message (not a bare exit)
+- Run the join command again to verify reconnection works
+
+### 4. Clean up
+
+```bash
+teardown.sh --local
+tmux kill-session -t test-collab
+```
+
+### What requires a real server to test
+
+These scripts need an actual remote Ubuntu server (e.g., DigitalOcean):
+
+| Script | Why it needs a server |
+|--------|---------------------|
+| `server-bootstrap.sh` | Installs packages, creates users on Ubuntu |
+| `add-collaborator.sh` | SSHs to server to add keys |
+| `join-claude-session-split.sh` | Creates split pane with SSH to remote |
+| `diagnose.sh SERVER_IP` | Remote health checks |
+| `teardown.sh SERVER_IP` | Remote session cleanup |
+
+To test these, follow the [DigitalOcean setup guide](digitalocean-setup.md) — a $12/month droplet is enough, and new users get $200 free credit.
