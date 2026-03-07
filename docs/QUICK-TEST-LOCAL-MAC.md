@@ -492,8 +492,9 @@ join-claude-session.sh host test-collab
 #   ✓ tmux session 'test-collab' found
 #   [host]>
 
-# Terminal 3: Join as collaborator
-join-claude-session.sh collaborator test-collab
+# Terminal 3: Join as collaborator (with a custom prefix)
+join-claude-session.sh collaborator test-collab --prefix JD
+# Prompt shows [JD]> instead of [collaborator]>
 ```
 
 Type a message in Terminal 2 or 3 — watch it appear with the `[host]` or `[collaborator]` prefix in Terminal 1.

@@ -3,16 +3,19 @@
 ## TL;DR
 
 ```bash
-# 1. Run the setup wizard:
+# 1. Clone and install:
 git clone https://github.com/jxandery/claude-code-collab.git
 cd claude-code-collab
-./setup.sh   # Choose "Collaborator", enter server IP
+./install.sh
 
-# 2. Send your public key to the host:
-setup-ssh.sh --show
+# 2. Add your SSH key to the server (enter password from host):
+ssh-copy-id claudeteam@SERVER_IP
 
-# 3. Once the host adds your key, connect:
+# 3. Connect:
 join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab
+
+# Optional: use a custom display prefix:
+join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab --prefix JY
 ```
 
 **New to this?** Follow the step-by-step guide below.
@@ -36,48 +39,39 @@ Your host has already set up the shared server. You just need to configure your 
 
 - [ ] Server IP address (e.g., `164.92.123.456`)
 - [ ] Username: `claudeteam`
-- [ ] Either:
-  - Password for `claudeteam` account, OR
-  - Confirmation that your SSH key has been added
+- [ ] Password for the `claudeteam` account (for one-time SSH key setup via `ssh-copy-id`)
 
 ---
 
-## STEP 1: Set Up SSH Keys (If You Don't Have Them)
+## STEP 1: Set Up SSH Access
 
-Check if you have SSH keys:
+### Option A: Self-service with ssh-copy-id (Easiest)
+
+If your host gave you a password for the `claudeteam` account:
+
 ```bash
-# Check for ED25519 (modern, recommended)
-ls ~/.ssh/id_ed25519.pub
+# Check if you have an SSH key
+ls ~/.ssh/id_ed25519.pub || ls ~/.ssh/id_rsa.pub
 
-# OR check for RSA (older but common)
-ls ~/.ssh/id_rsa.pub
+# If neither exists, create one:
+ssh-keygen -t ed25519 -C "your-email@example.com"
+# Press Enter for all prompts
+
+# Copy your key to the server (enter password once):
+ssh-copy-id claudeteam@SERVER_IP
 ```
 
-If you have either one, skip to displaying your key below.
+That's it — from now on you'll connect with SSH keys automatically.
 
-If you see "No such file" for both, create one:
+### Option B: Send your key to the host
+
+If Option A doesn't work, display your public key and send it to the host:
+
 ```bash
-# Modern ED25519 key (recommended)
-ssh-keygen -t ed25519 -C "collaborator@claudecollab"
-
-# OR traditional RSA key (if ED25519 not supported)
-ssh-keygen -t rsa -b 4096 -C "collaborator@claudecollab"
-
-# Press Enter for all prompts (accept defaults)
+setup-ssh.sh --show
 ```
 
-Display your public key:
-```bash
-# If you created/have ED25519:
-cat ~/.ssh/id_ed25519.pub
-
-# OR if you created/have RSA:
-cat ~/.ssh/id_rsa.pub
-```
-
-**Send this ENTIRE public key to the host** so they can add it to the server.
-
-> **Important:** Make sure you send the PUBLIC key (`.pub` file), not the private key. The public key starts with `ssh-ed25519` or `ssh-rsa`.
+The host will add it using `add-collaborator.sh`.
 
 ---
 
@@ -149,6 +143,7 @@ export COLLAB_USER_NAME="collaborator"
 export COLLAB_HOST="164.92.123.456"  # Replace with host's server IP
 export COLLAB_REMOTE_USER="claudeteam"
 export COLLAB_SESSION="claude-collab"
+export COLLAB_PREFIX="collaborator"  # Optional: customize your display prefix
 ```
 
 Save and exit (Ctrl+X, Y, Enter), then reload:
@@ -351,6 +346,9 @@ From your local machine (NOT on the server):
 
 ```bash
 join-claude-session-split.sh collaborator SERVER_IP claudeteam claude-collab
+
+# Or with a custom prefix (e.g., initials):
+join-claude-session-split.sh collaborator SERVER_IP claudeteam claude-collab --prefix JD
 ```
 
 Example:

@@ -33,7 +33,30 @@ NC='\033[0m'
 
 COLLAB_USER="claudeteam"
 SESSION_NAME="claude-collab"
-EXTRA_SSH_KEY="${1:-}"
+EXTRA_SSH_KEY=""
+COLLAB_PASSWORD=""
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --password)
+            COLLAB_PASSWORD="$2"
+            shift 2
+            ;;
+        *)
+            # First positional arg = extra SSH key (backward compatible)
+            if [ -z "$EXTRA_SSH_KEY" ]; then
+                EXTRA_SSH_KEY="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Generate a random password if none provided
+if [ -z "$COLLAB_PASSWORD" ]; then
+    COLLAB_PASSWORD=$(openssl rand -base64 12 | tr -d '/+=' | head -c 16)
+fi
 
 print_step() { echo -e "\n${BLUE}▸ ${BOLD}$1${NC}"; }
 print_ok()   { echo -e "${GREEN}  ✓ $1${NC}"; }
@@ -68,6 +91,19 @@ else
     # Allow sudo without password for initial setup
     echo "$COLLAB_USER ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/$COLLAB_USER"
     print_ok "User '$COLLAB_USER' created with sudo access"
+fi
+
+# Set password for ssh-copy-id self-service
+echo "${COLLAB_USER}:${COLLAB_PASSWORD}" | chpasswd
+print_ok "Password set for '$COLLAB_USER'"
+
+# Enable password auth so collaborators can use ssh-copy-id
+if grep -q '^PasswordAuthentication no' /etc/ssh/sshd_config 2>/dev/null; then
+    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    systemctl restart sshd
+    print_ok "Password authentication enabled for ssh-copy-id"
+else
+    print_ok "Password authentication already enabled"
 fi
 
 # ─── Step 2: SSH keys ───
@@ -223,8 +259,11 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 
 KEY_COUNT=$(wc -l < "$AUTHKEYS" | tr -d ' ')
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'YOUR_SERVER_IP')
+
 echo -e "  ${BOLD}Summary:${NC}"
 echo -e "  • User:         ${COLLAB_USER}"
+echo -e "  • Password:     ${COLLAB_PASSWORD}"
 echo -e "  • SSH keys:     ${KEY_COUNT} key(s) configured"
 echo -e "  • tmux session: ${SESSION_NAME}"
 echo -e "  • Node.js:      $(node --version 2>/dev/null || echo 'check manually')"
@@ -233,6 +272,20 @@ echo ""
 echo -e "  ${BOLD}What to do next:${NC}"
 echo -e "  1. SSH in as ${COLLAB_USER} and authenticate Claude Code"
 echo -e "  2. Start Claude Code in the tmux session"
-echo -e "  3. Share the server IP with your collaborator"
-echo -e "  4. Both connect with: join-claude-session-split.sh NAME SERVER_IP"
+echo -e "  3. Share the info below with your collaborators"
+echo ""
+echo -e "  ${YELLOW}━━━━━━━━ SHARE THIS WITH COLLABORATORS ━━━━━━━━${NC}"
+echo ""
+echo -e "  ${BOLD}Server IP:${NC}  ${SERVER_IP}"
+echo -e "  ${BOLD}Username:${NC}   ${COLLAB_USER}"
+echo -e "  ${BOLD}Password:${NC}   ${COLLAB_PASSWORD}"
+echo -e "  ${BOLD}Session:${NC}    ${SESSION_NAME}"
+echo ""
+echo -e "  ${BOLD}Collaborator commands:${NC}"
+echo -e "  ssh-copy-id ${COLLAB_USER}@${SERVER_IP}  # enter password once"
+echo -e "  git clone https://github.com/jxandery/claude-code-collab.git"
+echo -e "  cd claude-code-collab && ./install.sh"
+echo -e "  join-claude-session-split.sh NAME ${SERVER_IP} ${COLLAB_USER} ${SESSION_NAME}"
+echo ""
+echo -e "  ${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

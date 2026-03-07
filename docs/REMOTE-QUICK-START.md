@@ -63,6 +63,7 @@ Before starting, ensure you have:
 
 - [ ] A server with SSH access (IP address like `68.183.159.246`)
 - [ ] Server username (like `claudeteam`)
+- [ ] Server password (for collaborator SSH key self-service via `ssh-copy-id`)
 - [ ] Scripts installed on your local machine (`./install.sh`)
 - [ ] Scripts installed on the server (`./install.sh`)
 - [ ] Latest code pulled everywhere (`git pull`)

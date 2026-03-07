@@ -6,6 +6,21 @@ This guide is for the **host** who is setting up the server for the first time. 
 
 ---
 
+## Quick Path
+
+If you already have a server, use the one-command bootstrap:
+
+```bash
+scp server-bootstrap.sh root@YOUR_SERVER_IP:/tmp/
+ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh'
+# Or with a custom password:
+ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh --password MyPassword123'
+```
+
+This auto-creates the `claudeteam` user, installs everything, generates a password, and prints collaborator instructions. Skip to [Step 10](#step-10-server-setup-complete) if using this.
+
+---
+
 ## Prerequisites
 
 - [ ] Basic command line knowledge
@@ -375,16 +390,22 @@ free -h
 
 ## Adding New Collaborators
 
-To add a new person:
+### Option A: Self-service (Easiest)
+
+Share the `claudeteam` password with collaborators. They add their own SSH key:
+
+```bash
+# Collaborator runs on their machine:
+ssh-copy-id claudeteam@YOUR_SERVER_IP
+# Enter password once — SSH keys from then on
+```
+
+### Option B: Manual
 
 1. **Get their SSH public key** (they run: `cat ~/.ssh/id_ed25519.pub`)
-2. **Add it to authorized_keys:**
+2. **Add it using the helper script:**
    ```bash
-   ssh claudeteam@68.183.159.246
-   nano ~/.ssh/authorized_keys
-   # Paste their key on a new line
-   # Save: Ctrl+X, Y, Enter
-   exit
+   add-collaborator.sh YOUR_SERVER_IP "ssh-ed25519 AAAA...their-key..."
    ```
 3. **Send them [COLLABORATOR-INSTRUCTIONS.md](COLLABORATOR-INSTRUCTIONS.md)**
 

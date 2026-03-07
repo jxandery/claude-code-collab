@@ -9,6 +9,7 @@
 # 2. Bootstrap your server (DigitalOcean or AWS):
 scp server-bootstrap.sh root@YOUR_SERVER_IP:/tmp/
 ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh'
+# ↑ Auto-generates a password. Use --password CUSTOM to set your own.
 
 # 3. Authenticate Claude Code on the server:
 ssh claudeteam@YOUR_SERVER_IP
@@ -16,11 +17,14 @@ tmux attach-session -t claude-collab
 claude
 # Ctrl+B, D to detach
 
-# 4. Add your collaborator's SSH key:
+# 4. Share the claudeteam password so collaborators can self-add their SSH key:
+#    ssh-copy-id claudeteam@YOUR_SERVER_IP
+# Or manually add their key:
 add-collaborator.sh YOUR_SERVER_IP "ssh-ed25519 AAAA...their-key..."
 
-# 5. Connect:
+# 5. Connect (optionally with a custom prefix):
 join-claude-session-split.sh host YOUR_SERVER_IP claudeteam claude-collab
+# join-claude-session-split.sh host YOUR_SERVER_IP claudeteam claude-collab --prefix JY
 ```
 
 **New to this?** Follow the step-by-step guide below.
@@ -467,8 +471,14 @@ I've created a separate file for collaborator: `setup-for-collaborator.md`
 Send collaborator:
 1. The `setup-for-collaborator.md` file
 2. The server IP address
-3. The `claudeteam` user password (if not using SSH keys)
-4. OR: Ask collaborator to send you his SSH public key
+3. The `claudeteam` account password — they run `ssh-copy-id claudeteam@SERVER_IP` once to add their key
+
+**Self-service SSH key setup:** Collaborators can add their own SSH key to the server without your help:
+```bash
+# Collaborator runs this on their machine (enters password once):
+ssh-copy-id claudeteam@SERVER_IP
+# After that, they connect with SSH keys — no password needed again
+```
 
 collaborator will run the same script but with his name:
 ```bash

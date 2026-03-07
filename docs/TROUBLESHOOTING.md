@@ -96,7 +96,15 @@ ssh -o PubkeyAuthentication=no claudeteam@68.183.159.246
 # Enter password when prompted
 ```
 
-**Solution 2: Add your SSH key to the server**
+**Solution 2: Add your SSH key with ssh-copy-id (easiest)**
+
+If you have the `claudeteam` password:
+```bash
+ssh-copy-id claudeteam@68.183.159.246
+# Enter password once — SSH keys from then on
+```
+
+**Solution 3: Add your SSH key manually**
 
 ```bash
 # On your local machine, copy your public key
@@ -117,7 +125,7 @@ exit
 ssh claudeteam@68.183.159.246  # Should work without password
 ```
 
-**Solution 3: Check SSH key permissions**
+**Solution 4: Check SSH key permissions**
 
 ```bash
 # On your local machine
@@ -810,7 +818,7 @@ tmux new-session -s 2025-11-27-planning
 | Issue                                  | Quick Fix                                                          |
 |----------------------------------------|--------------------------------------------------------------------|
 | Git pull fails                         | `git fetch origin && git reset --hard origin/main`                |
-| Can't SSH                              | `ssh -o PubkeyAuthentication=no user@IP` (use password)           |
+| Can't SSH                              | `ssh-copy-id user@IP` (enter password once) or use password       |
 | tmux not found                         | `brew install tmux` (macOS) or `sudo apt install tmux` (Linux)    |
 | Ctrl+B, D types "D"                    | Use `tmux detach` command instead                                  |
 | Session not found                      | Create it: `tmux new-session -s claude-collab`                     |

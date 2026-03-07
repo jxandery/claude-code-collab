@@ -16,6 +16,8 @@ If you know what you're doing, here's the fast path:
 # 2. Bootstrap the server:
 scp server-bootstrap.sh root@YOUR_SERVER_IP:/tmp/
 ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh'
+# ↑ Auto-generates a password and prints collaborator instructions
+# Use --password CUSTOM to set your own password
 # 3. SSH in, authenticate Claude Code, start it in the tmux session:
 ssh claudeteam@YOUR_SERVER_IP
 tmux attach-session -t claude-collab
@@ -517,6 +519,9 @@ From your Mac (NOT on the server):
 
 ```bash
 join-claude-session-split.sh host 68.183.159.246 claudeteam claude-collab
+
+# Or with a custom display prefix:
+join-claude-session-split.sh host 68.183.159.246 claudeteam claude-collab --prefix JY
 ```
 
 You'll see a split screen:
@@ -602,85 +607,57 @@ Type `exit` to disconnect from SSH.
 
 ## Part 8: Add Your Collaborator (5 minutes)
 
-### Get Collaborator's SSH Key
+### Option A: Self-Service (Easiest)
 
-Have your collaborator run on their machine:
-
-```bash
-# Check if they have a key
-ls ~/.ssh/id_rsa.pub
-```
-
-If not, they create one:
-```bash
-ssh-keygen -t rsa -b 4096
-# Press Enter for all prompts
-```
-
-Then they run:
-```bash
-cat ~/.ssh/id_rsa.pub
-```
-
-They send you the entire output.
-
-### Add Collaborator's Key to Server
-
-On your Mac:
+Set a password on the `claudeteam` account so collaborators can add their own SSH key:
 
 ```bash
-# SSH to server
-ssh claudeteam@164.92.123.456
-
-# Edit authorized keys
-nano ~/.ssh/authorized_keys
-```
-
-Add their public key on a **new line** (line 3 if you already have 2 keys).
-
-**Save:** Ctrl + X, Y, Enter
-
-Exit server:
-```bash
+# On the server (as root):
+ssh root@164.92.123.456
+echo 'claudeteam:YOUR_CHOSEN_PASSWORD' | chpasswd
+# Enable password auth for ssh-copy-id:
+sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+systemctl restart sshd
 exit
 ```
 
-### Share Connection Info with Collaborator
-
-Send them:
-
+Then share this with your collaborator:
 ```
 Server IP: 164.92.123.456
 Username: claudeteam
+Password: YOUR_CHOSEN_PASSWORD  (for one-time SSH key setup)
 Session name: claude-collab
-Password: [the claudeteam password, or tell them to use SSH key]
-
 Repository: https://github.com/jxandery/claude-code-collab
 ```
 
-### Collaborator Setup (On Their Machine)
-
 Your collaborator runs:
-
 ```bash
-# Clone repository
-cd ~
+# 1. Add their SSH key (enter password once):
+ssh-copy-id claudeteam@164.92.123.456
+
+# 2. Clone and install scripts:
 git clone https://github.com/jxandery/claude-code-collab.git
 cd claude-code-collab
-
-# Install script
 ./install.sh
 source ~/.zshrc  # or ~/.bashrc
 
-# Test connection
-ssh claudeteam@164.92.123.456
-# Should connect!
-
-# Join session
-join-claude-session.sh collaborator claude-collab
+# 3. Join session:
+join-claude-session-split.sh collaborator 164.92.123.456 claudeteam claude-collab
 ```
 
-They'll see the same split-screen interface, but their prompt will say `[collaborator]>`
+### Option B: Manual Key Addition
+
+If you prefer not to enable password auth, have your collaborator send you their public key:
+
+```bash
+# Collaborator runs:
+cat ~/.ssh/id_ed25519.pub  # or ~/.ssh/id_rsa.pub
+```
+
+Then add it using the helper script:
+```bash
+add-collaborator.sh 164.92.123.456 "ssh-ed25519 AAAA...their-key..."
+```
 
 ---
 

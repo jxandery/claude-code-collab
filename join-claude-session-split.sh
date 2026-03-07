@@ -4,29 +4,45 @@
 # Shows Claude Code output (top) and your input (bottom) in one terminal window.
 #
 # Usage:
-#   join-claude-session-split.sh <username> <server-ip> [remote-user] [session]
+#   join-claude-session-split.sh <username> <server-ip> [remote-user] [session] [--prefix PREFIX]
 #   join-claude-session-split.sh --debug <username> <server-ip> [remote-user] [session]
 #
 # Examples:
 #   join-claude-session-split.sh jack 68.183.159.246 claudeteam claude-collab
+#   join-claude-session-split.sh jack 68.183.159.246 --prefix JY
 #   join-claude-session-split.sh collaborator 68.183.159.246
 #
 # Or set environment variables:
 #   export COLLAB_HOST="68.183.159.246"
 #   export COLLAB_REMOTE_USER="claudeteam"
 #   export COLLAB_SESSION="claude-collab"
+#   export COLLAB_PREFIX="JY"
 #   join-claude-session-split.sh jack
 
 DEBUG=0
-if [ "$1" = "--debug" ]; then
-    DEBUG=1
-    shift
-fi
+PREFIX=""
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --debug)
+            DEBUG=1
+            shift
+            ;;
+        --prefix)
+            PREFIX="$2"
+            shift 2
+            ;;
+        *)
+            POSITIONAL+=("$1")
+            shift
+            ;;
+    esac
+done
 
-USER_NAME="${1}"
-REMOTE_HOST="${2:-${COLLAB_HOST}}"
-REMOTE_USER="${3:-${COLLAB_REMOTE_USER:-claudeteam}}"
-SESSION="${4:-${COLLAB_SESSION:-claude-collab}}"
+USER_NAME="${POSITIONAL[0]}"
+REMOTE_HOST="${POSITIONAL[1]:-${COLLAB_HOST}}"
+REMOTE_USER="${POSITIONAL[2]:-${COLLAB_REMOTE_USER:-claudeteam}}"
+SESSION="${POSITIONAL[3]:-${COLLAB_SESSION:-claude-collab}}"
 
 # If no username provided, use hostname
 if [ -z "$USER_NAME" ]; then
@@ -34,6 +50,11 @@ if [ -z "$USER_NAME" ]; then
     if [ -z "$USER_NAME" ]; then
         USER_NAME="User"
     fi
+fi
+
+# Default prefix to env var or username
+if [ -z "$PREFIX" ]; then
+    PREFIX="${COLLAB_PREFIX:-$USER_NAME}"
 fi
 
 # Validate configuration
@@ -165,7 +186,7 @@ DIM='\033[2m'
 NC='\033[0m'
 
 echo -e "\${GREEN}=== Your Input Terminal ===\${NC}"
-echo "Type your prompts below. They will be prefixed with [${USER_NAME}]"
+echo "Type your prompts below. They will be prefixed with [${PREFIX}]"
 echo ""
 echo -e "\${DIM}  Ctrl+C     = exit input (session keeps running)\${NC}"
 echo -e "\${DIM}  Ctrl+B, D  = detach from tmux entirely\${NC}"
@@ -180,11 +201,11 @@ cleanup() {
 trap cleanup INT
 
 while true; do
-    read -e -p "[${USER_NAME}]> " input
+    read -e -p "[${PREFIX}]> " input
     if [ -n "\$input" ]; then
         # Escape single quotes in input for safe transmission
         escaped_input=\$(printf '%s' "\$input" | sed "s/'/'\\\\\\\\''/g")
-        if ! ssh ${REMOTE_USER}@${REMOTE_HOST} "tmux send-keys -t ${SESSION} '[${USER_NAME}] \${escaped_input}' && tmux send-keys -t ${SESSION} Enter" 2>/dev/null; then
+        if ! ssh ${REMOTE_USER}@${REMOTE_HOST} "tmux send-keys -t ${SESSION} '[${PREFIX}] \${escaped_input}' && tmux send-keys -t ${SESSION} Enter" 2>/dev/null; then
             echo -e "\${YELLOW}  Failed to send. Check connection.\${NC}"
             echo "  Try: ssh ${REMOTE_USER}@${REMOTE_HOST} 'tmux ls'"
         fi

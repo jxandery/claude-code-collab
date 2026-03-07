@@ -14,11 +14,26 @@ The host should have given you:
 - [ ] Server username (e.g., `claudeteam`)
 - [ ] Session name (e.g., `claude-collab`)
 - [ ] Which mode to use: **Split-pane** or **Simple**
-- [ ] SSH access (either password or your SSH key added to the server)
+- [ ] SSH access (see Step 0 below)
 
 ---
 
 ## Before You Start
+
+### 0. Set up SSH access (one-time)
+
+**Easiest method** — if the host gave you a password for the `claudeteam` account:
+```bash
+# Add your SSH key to the server (enter password once):
+ssh-copy-id claudeteam@68.183.159.246
+
+# From now on, you connect with SSH keys — no password needed
+```
+
+If `ssh-copy-id` isn't available, send your public key to the host:
+```bash
+cat ~/.ssh/id_ed25519.pub   # or ~/.ssh/id_rsa.pub
+```
 
 ### 1. Install the collaboration scripts
 
@@ -76,6 +91,9 @@ The host will tell you which mode to use. Follow the instructions for that mode:
 
 ```bash
 ./join-claude-session-split.sh YourName 68.183.159.246 claudeteam claude-collab
+
+# Or with a custom display prefix (e.g., your initials):
+./join-claude-session-split.sh YourName 68.183.159.246 claudeteam claude-collab --prefix JD
 ```
 
 **Replace these values:**
@@ -83,6 +101,7 @@ The host will tell you which mode to use. Follow the instructions for that mode:
 - `68.183.159.246` - The server IP the host gave you
 - `claudeteam` - The server username the host gave you
 - `claude-collab` - The session name the host gave you
+- `--prefix` - (Optional) Custom tag shown before your messages instead of your username
 
 ### What you'll see:
 

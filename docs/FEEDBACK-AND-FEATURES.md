@@ -90,6 +90,12 @@ Here are some features users have requested. Vote or add your thoughts!
 | Download files from server             | ✓ Implemented   | See `download-from-server.sh`      |
 | Interactive setup wizard               | ✓ Implemented   | See `start-collaboration.sh`       |
 | List active sessions                   | ✓ Implemented   | See `list-sessions.sh`             |
+| Custom display prefix                  | ✓ Implemented   | `--prefix` flag on join scripts    |
+| Self-service SSH key setup             | ✓ Implemented   | `ssh-copy-id` with auto-password   |
+| Dynamic password management            | ✓ Implemented   | `server-bootstrap.sh --password`   |
+| Health checks on connect               | ✓ Implemented   | Built into join scripts            |
+| Diagnostic tool                        | ✓ Implemented   | See `diagnose.sh`                  |
+| One-command server setup               | ✓ Implemented   | See `server-bootstrap.sh`          |
 | Windows/WSL support                    | 🔄 In Progress  | #TBD                               |
 | Web UI instead of terminal             | 💭 Under Review | #TBD                               |
 | Session recording/playback             | 💭 Under Review | #TBD                               |

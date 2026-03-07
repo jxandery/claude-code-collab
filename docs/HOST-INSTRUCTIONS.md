@@ -159,6 +159,9 @@ This gives you Claude output and input in one window.
 
 ```bash
 ./join-claude-session-split.sh host 68.183.159.246 claudeteam claude-collab
+
+# Or with a custom display prefix:
+./join-claude-session-split.sh host 68.183.159.246 claudeteam claude-collab --prefix JY
 ```
 
 **Replace these values:**
@@ -166,6 +169,7 @@ This gives you Claude output and input in one window.
 - `68.183.159.246` - Your server IP
 - `claudeteam` - Your server username
 - `claude-collab` - Your session name
+- `--prefix` - (Optional) Custom tag shown before your messages
 
 **What you'll see:**
 
@@ -252,7 +256,14 @@ Your session is ready! Now collaborators can join.
 2. Server details:
    - Server IP: `68.183.159.246`
    - Username: `claudeteam`
+   - Password: (for one-time SSH key setup via `ssh-copy-id`)
    - Session name: `claude-collab`
+
+**Self-service SSH:** Collaborators add their own key by running:
+```bash
+ssh-copy-id claudeteam@68.183.159.246
+```
+They enter the password once, then connect with SSH keys from that point on.
 
 **Tell them which mode you're using:**
 - Split-pane mode (recommended)

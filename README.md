@@ -23,7 +23,7 @@ That's it. The wizard asks if you're a host or collaborator and walks you throug
 ## What This Does
 
 - **Multiple users** can interact with one Claude Code session
-- **User attribution**: Each prompt is automatically prefixed with `[Username]`
+- **User attribution**: Each prompt is automatically prefixed with `[Username]` (customizable with `--prefix`)
 - **Real-time**: Everyone sees all interactions as they happen
 - **Simple setup**: Run the setup wizard and follow the prompts
 
@@ -76,6 +76,11 @@ claude-code
 
 Type in Terminal 2 or 3 — watch it appear with `[host]` or `[collaborator]` prefix!
 
+Want a custom prefix? Add `--prefix YourTag`:
+```bash
+./join-claude-session.sh host test-collab --prefix JY
+```
+
 ### Option 3: Remote Collaboration
 
 **Host** sets up a cloud server (one-time, ~30 min):
@@ -84,14 +89,21 @@ Type in Terminal 2 or 3 — watch it appear with `[host]` or `[collaborator]` pr
 # 2. Bootstrap the server:
 scp server-bootstrap.sh root@YOUR_SERVER_IP:/tmp/
 ssh root@YOUR_SERVER_IP 'bash /tmp/server-bootstrap.sh'
+# ↑ Auto-generates a password and displays collaborator instructions
 # 3. Connect:
 join-claude-session-split.sh host YOUR_SERVER_IP claudeteam claude-collab
 ```
 
 **Collaborator** just connects (~5 min):
 ```bash
-./setup.sh   # Choose "collaborator", enter server IP, done
+# Add your SSH key to the server (one-time, enter password from host):
+ssh-copy-id claudeteam@SERVER_IP
+
+# Join:
 join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab
+
+# Or with a custom prefix:
+join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab --prefix JY
 ```
 
 ---
@@ -102,11 +114,12 @@ join-claude-session-split.sh YourName SERVER_IP claudeteam claude-collab
 |--------|-------------|
 | `setup.sh` | Interactive setup wizard |
 | `install.sh` | Install all scripts to `~/bin` |
-| `join-claude-session-split.sh` | Join session with split view (recommended) |
-| `join-claude-session.sh` | Join session with input-only mode |
+| `join-claude-session-split.sh` | Join session with split view (recommended). Supports `--prefix` |
+| `join-claude-session.sh` | Join session with input-only mode. Supports `--prefix` |
 | `setup-ssh.sh` | Detect/create SSH keys |
 | `add-collaborator.sh` | Add a collaborator's SSH key to the server |
-| `server-bootstrap.sh` | One-command server setup (run on Ubuntu server) |
+| `server-bootstrap.sh` | One-command server setup. Auto-generates collaborator password |
+| `start-collaboration.sh` | Interactive wizard with password management |
 | `diagnose.sh` | Check if everything is working |
 | `teardown.sh` | Clean up sessions |
 
@@ -275,6 +288,7 @@ claude-code-collab/
 ├── server-bootstrap.sh                # One-command server setup
 ├── join-claude-session.sh             # Simple input mode
 ├── join-claude-session-split.sh       # Split-pane mode (recommended)
+├── start-collaboration.sh             # Interactive wizard with password management
 ├── setup-ssh.sh                       # SSH key setup helper
 ├── add-collaborator.sh                # Add collaborator SSH key
 ├── diagnose.sh                        # Diagnostic tool

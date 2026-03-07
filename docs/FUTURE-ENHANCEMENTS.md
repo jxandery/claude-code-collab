@@ -557,8 +557,12 @@ Have an idea? See [FEEDBACK-AND-FEATURES.md](FEEDBACK-AND-FEATURES.md) for how t
 
 ---
 
-**Last Updated:** 2025-11-27
-**Recent Changes:** Added session lifecycle management as #1 priority with complete documentation
+**Last Updated:** 2026-03-07
+**Recent Changes:**
+- Implemented custom `--prefix` flag for join scripts
+- Implemented self-service SSH via `ssh-copy-id` with auto-generated password
+- Added dynamic password management to `server-bootstrap.sh` and `start-collaboration.sh`
+- Added health checks, diagnostics, and one-command server setup
 
 **Maintainer Notes:**
 - Review this document quarterly
